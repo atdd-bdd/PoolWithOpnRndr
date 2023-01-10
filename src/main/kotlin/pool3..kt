@@ -9,8 +9,7 @@ import org.openrndr.panel.elements.button
 import org.openrndr.panel.elements.clicked
 import org.openrndr.panel.elements.slider
 import org.openrndr.panel.layout
-import kotlin.math.PI
-import kotlin.math.abs
+import kotlin.math.*
 
 const val BALL_RADIUS = 10.0
 
@@ -65,6 +64,7 @@ fun main() = application {
             layout {
 
                 button {
+                    @Suppress("LiftReturnOrAssignment")
                     if (!moving)
                         label = "Move"
                     else
@@ -187,6 +187,7 @@ fun computeTotalVelocity(velocity: Velocity): Double {
 
 }
 */
+@Suppress("ReplaceWithOperatorAssignment", "LocalVariableName")
 fun computeCollisionVelocity(
     position1: Position, velocity1: Velocity,
     position2: Position, velocity2: Velocity
@@ -225,8 +226,9 @@ fun computeCollisionVelocity(
 
     val fy21 = 1.0E-12 * abs(y21)
 
-    var sign: Double
+    @Suppress("CanBeVal") var sign: Double
     if (abs(x21) < fy21) {
+        @Suppress("LiftReturnOrAssignment")
         if (x21 < 0.0) {
             sign = -1.0
         } else {
@@ -248,50 +250,47 @@ fun computeCollisionVelocity(
     vy1 = (vy1 - vy_cm) * R1 + vy_cm
     vx2 = (vx2 - vx_cm) * R1 + vx_cm
     vy2 = (vy2 - vy_cm) * R1 + vy_cm
-    val result = TwoVelocities(Velocity(vx1, vy1), Velocity(vx2, vy2))
-    return result
+    return TwoVelocities(Velocity(vx1, vy1), Velocity(vx2, vy2))
 }
 
 
 fun computeDistance(position1: Position, position2: Position): Double {
-    val distance_x = position1.x - position2.x
-    val distance_y = position1.y - position2.y
-    val distance = Math.sqrt(distance_x * distance_x + distance_y * distance_y)
-    return distance
+    val distanceX = position1.x - position2.x
+    val distanceY = position1.y - position2.y
+    return sqrt(distanceX * distanceX + distanceY * distanceY)
 }
 
 
 fun stoppedMoving(balls: Array<Ball>): Boolean {
 
-    val STOPPED = .01
+    @Suppress("LocalVariableName") val STOPPED_SPEED = .01
     var stopped = true
-    var this_stopped: Boolean
-    for (index in 0..balls.size - 1) {
-        this_stopped = (Math.abs(balls[index].velocity.x) < STOPPED) && (Math.abs(balls[index].velocity.y) < STOPPED)
-        if (!this_stopped) stopped = false
+    var thisStopped: Boolean
+    for (index in balls.indices) {
+        thisStopped = (abs(balls[index].velocity.x) < STOPPED_SPEED) && (abs(balls[index].velocity.y) < STOPPED_SPEED)
+        if (!thisStopped) stopped = false
     }
     return stopped
 }
 
 fun rollResistance(velocity: Velocity, rollingResistance: Double): Velocity {
-    val newVelocity = Velocity(velocity.x * (1.0 - rollingResistance), velocity.y * (1.0 - rollingResistance))
-    return newVelocity
+    return Velocity(velocity.x * (1.0 - rollingResistance), velocity.y * (1.0 - rollingResistance))
 }
 
 fun checkCushion(position: Position, velocity: Velocity, tableUpperLeft: Vector2, tableSize: Vector2): Velocity {
-    var velocity_x = velocity.x
-    var velocity_y = velocity.y
-    if (((position.x <= tableUpperLeft.x + BALL_RADIUS) && velocity_x <= 0) ||
-        ((position.x >= tableUpperLeft.x + tableSize.x - BALL_RADIUS) && velocity_x >= 0)
+    var velocityX = velocity.x
+    var velocityY = velocity.y
+    if (((position.x <= tableUpperLeft.x + BALL_RADIUS) && velocityX <= 0) ||
+        ((position.x >= tableUpperLeft.x + tableSize.x - BALL_RADIUS) && velocityX >= 0)
     ) {
-        velocity_x = -velocity_x
+        velocityX = -velocityX
     }
-    if (((position.y <= tableUpperLeft.y + BALL_RADIUS) && velocity_y <= 0) ||
-        ((position.y >= tableUpperLeft.y + tableSize.y - BALL_RADIUS) && velocity_y >= 0)
+    if (((position.y <= tableUpperLeft.y + BALL_RADIUS) && velocityY <= 0) ||
+        ((position.y >= tableUpperLeft.y + tableSize.y - BALL_RADIUS) && velocityY >= 0)
     ) {
-        velocity_y = -velocity_y
+        velocityY = -velocityY
     }
-    return Velocity(velocity_x, velocity_y)
+    return Velocity(velocityX, velocityY)
 }
 
 
@@ -331,8 +330,8 @@ private fun updatePosition(start: Position, speed: Velocity): Position {
 private fun xyFromAngle(angle: Double): Percentage {
     val result = Percentage(0.0, 0.0)
     val radians = angle * PI / 180.0
-    result.x = Math.sin(radians)
-    result.y = Math.cos(radians)
+    result.x = sin(radians)
+    result.y = cos(radians)
     return result
 }
 
