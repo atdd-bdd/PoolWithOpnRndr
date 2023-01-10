@@ -33,7 +33,7 @@
         }
         program {
             // Create a control manager to manage the user interface
-            var moving = false;
+            var moving = false
             extend(ControlManager())  {
                 // Create a horizontal layout to hold the controls
                 layout {

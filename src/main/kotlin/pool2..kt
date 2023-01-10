@@ -4,6 +4,7 @@
 import org.openrndr.Program
 import org.openrndr.application
 import org.openrndr.color.ColorRGBa
+import org.openrndr.extra.color.presets.GREEN_YELLOW
 import org.openrndr.extra.color.presets.WHEAT
 import org.openrndr.math.Vector2
 import org.openrndr.panel.ControlManager
@@ -17,8 +18,7 @@ import kotlin.math.PI
 
 fun main() = application {
 // Define the initial velocity of the pool ball
-    var V = 1.0
-    var velocity = Velocity(0.0, 0.0)
+     var velocity = Velocity(0.0, 0.0)
 // Define the radius of the pool ball
     val RADIUS = 10.0
 
@@ -30,14 +30,14 @@ fun main() = application {
     var R = 0.3
 
 // Define the background color
-    val BACKGROUND_COLOR = ColorRGBa.GREEN
+    val BACKGROUND_COLOR = ColorRGBa.GREEN_YELLOW
     configure {
         width = 1000
         height = 700
     }
     program {
         // Create a control manager to manage the user interface
-        var moving = false;
+        var moving = false
         extend(ControlManager()) {
             // Create a horizontal layout to hold the controls
             layout {
@@ -99,7 +99,7 @@ fun main() = application {
                     val percentage: Percentage = xyFromAngle(angle)
                     val x_diff = force * percentage.x * 100.0
                     val y_diff = force * percentage.y * 100.0
-                    var end: Vector2 = Vector2(start.x + x_diff, start.y + y_diff)
+                    var end = Vector2(start.x + x_diff, start.y + y_diff)
                     velocity.x = force * percentage.x
                     velocity.y = force * percentage.y
                     drawer.lineSegment(start, end)
@@ -126,9 +126,9 @@ private fun Program.drawBall(POSITION: Position, RADIUS: Double) {
 
 fun updatePosition(start : Position, speed: Velocity): Position{
     var end: Position = Position (0.0,0.0)
-    end.x = start.x + speed.x;
-    end.y = start.y + speed.y;
-    return end;
+    end.x = start.x + speed.x
+    end.y = start.y + speed.y
+    return end
 }
 
 fun xyFromAngle( angle : Double) : Percentage {
