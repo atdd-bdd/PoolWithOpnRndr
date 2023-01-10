@@ -124,14 +124,14 @@ private fun Program.drawBall(POSITION: Position, RADIUS: Double) {
     drawer.circle(positionV2, RADIUS / 4)
 }
 
-fun updatePosition(start : Position, speed: Velocity): Position{
+private fun updatePosition(start : Position, speed: Velocity): Position{
     var end: Position = Position (0.0,0.0)
     end.x = start.x + speed.x
     end.y = start.y + speed.y
     return end
 }
 
-fun xyFromAngle( angle : Double) : Percentage {
+private fun xyFromAngle( angle : Double) : Percentage {
     var  result = Percentage(0.0, 0.0)
     val radians = angle * PI / 180.0
     result.x = Math.sin(radians)

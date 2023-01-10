@@ -1,0 +1,32 @@
+       Ball(12, Position(150.0, 300.0), Velocity(0.0, 0.0), true),
+
+  val cloneNames = names.map{it.copy()} - deep copy
+
+  val m = 1.0
+    // Calculate the total momentum of the two balls before the collision
+    val v1 = computeTotalVelocity(velocity1)
+    val v2 = computeTotalVelocity(velocity2)
+    val p1 = m * v1;
+    val p2 = m * v2;
+    val p_total = p1 + p2;
+    val theta =
+
+    // Calculate the total kinetic energy of the two balls before the collision
+    val E1 = 0.5 * m * v1 * v1;
+    val E2 = 0.5 * m * v2 * v2;
+    val E_total = E1 + E2;
+
+    // Calculate the x and y components of the velocities of each ball
+    // before the collision
+    val v1_x = velocity1.x
+    val v1_y = velocity1.y
+    val v2_x = velocity2.x
+    val v2_y = velocity2.y
+
+    // Solve for the x and y components of the velocities of each ball
+    // after the collision
+    val v1_x_prime = (p_total - 2 * p2 * Math.cos(2 * theta)) / (2 * m);
+    val v1_y_prime = (E_total - m * v1_x_prime * v1_x_prime) / m;
+    val v2_x_prime = (p_total - 2 * p1 * Math.cos(2 * theta)) / (2 * m);
+    val v2_y_prime = (E_total - m * v2_x_prime * v2_x_prime) / m;
+
