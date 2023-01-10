@@ -18,7 +18,7 @@ val BALL_RADIUS = 10.0
 
 fun main() = application {
 // Define the initial velocity of the pool ball
-       var balls = arrayOf<Ball>(
+       val balls = arrayOf<Ball>(
         Ball(0, Position(100.0, 200.0), Velocity(0.0, 0.0), true),
         Ball(1, Position(150.0, 300.0), Velocity(0.0, 0.0), true),
         Ball(2, Position(170.0, 300.0), Velocity(0.0, 0.0), true),
@@ -36,7 +36,7 @@ fun main() = application {
         Ball(14, Position(150.0, 460.0), Velocity(0.0, 0.0), true),
         Ball(15, Position(150.0, 480.0), Velocity(0.0, 0.0), true),
     )
-    var previousBalls = balls.map{it.copy()}
+   // var previousBalls = balls.map{it.copy()}
     var angle = 0.0
     var force = 0.0
 
@@ -77,8 +77,8 @@ fun main() = application {
                     backgroundColor = ColorRGBa.RED
                     clicked {
                         moving = !moving
-                        if (moving)
-                            previousBalls = balls.map{it.copy()}
+                       // if (moving)
+                            //previousBalls = balls.map{it.copy()}
                     }
                 }
 
@@ -134,7 +134,7 @@ fun main() = application {
                 }
                 else
                 {
-                    val start: Vector2 = Vector2(balls[0].position.x, balls[0].position.y)
+                    val start = Vector2(balls[0].position.x, balls[0].position.y)
                     val percentage: Percentage = xyFromAngle(angle)
                     val x_diff = force * percentage.x * 100.0
                     val y_diff = force * percentage.y * 100.0
@@ -154,11 +154,11 @@ fun main() = application {
 fun computeCollisions(balls: Array<Ball>) {
     for (first in 0..balls.size-1){
         for (second in first + 1.. balls.size - 1){
-            val distance = computeDistance(balls[first].position, balls[second].position);
+            val distance = computeDistance(balls[first].position, balls[second].position)
             val next_first_position = updatePosition(balls[first].position, balls[first].velocity)
             val next_second_position = updatePosition(balls[second].position, balls[second].velocity)
             val next_distance = computeDistance(next_first_position, next_second_position)
-            if ((distance<= 2*BALL_RADIUS) && (next_distance <= distance)) {
+            if ((distance<= 2*BALL_RADIUS) || (next_distance  <= 2*BALL_RADIUS)) {
                 val velocities: TwoVelocities = computeCollisionVelocity(
                     balls[first].position,
                     balls[first].velocity, balls[second].position, balls[second].velocity)
@@ -168,6 +168,20 @@ fun computeCollisions(balls: Array<Ball>) {
             }
         }
     }
+fun computeOverlap(balls: Array<Ball>) {
+    for (first in 0..balls.size-1){
+        for (second in first + 1.. balls.size - 1){
+            val distance = computeDistance(balls[first].position, balls[second].position)
+            if ((distance<= 2*BALL_RADIUS) /*&& (next_distance <= distance)*/) {
+                val velocities: TwoVelocities = computeCollisionVelocity(
+                    balls[first].position,
+                    balls[first].velocity, balls[second].position, balls[second].velocity)
+                balls[first].velocity = velocities.velocity1
+                balls[second].velocity = velocities.velocity2
+            }
+        }
+    }
+}
 
 fun computeTotalVelocity(velocity: Velocity): Double {
     val value = Math.sqrt(velocity.x * velocity.x + velocity.y * velocity.y)
@@ -197,7 +211,7 @@ fun computeCollisionVelocity(position1: Position, velocity1: Velocity,
         val vx21=vx2-vx1
         val vy21=vy2-vy1
 
-    val vx_cm = (m1*vx1+m2*vx2)/(m1+m2)
+        val vx_cm = (m1*vx1+m2*vx2)/(m1+m2)
         val vy_cm = (m1*vy1+m2*vy2)/(m1+m2)
 
 
@@ -211,10 +225,10 @@ fun computeCollisionVelocity(position1: Position, velocity1: Velocity,
 
         val fy21=1.0E-12*Math.abs(y21)
 
-    var sign = 0.0
+        var sign = 0.0
         if ( Math.abs(x21)<fy21 ) {
             if (x21<0.0) { sign=-1.0 } else { sign=1.0}
-            x21=fy21*sign;
+            x21=fy21*sign
         }
 
 //     ***  update velocities ***
@@ -230,7 +244,7 @@ fun computeCollisionVelocity(position1: Position, velocity1: Velocity,
         vy1=(vy1-vy_cm)*R + vy_cm
         vx2=(vx2-vx_cm)*R + vx_cm
         vy2=(vy2-vy_cm)*R + vy_cm
-        val result = TwoVelocities(Velocity(vx1,vx2), Velocity(vx2, vy2))
+        val result = TwoVelocities(Velocity(vx1,vy1), Velocity(vx2, vy2))
         return result
     }
 
@@ -251,11 +265,7 @@ fun stoppedMoving(balls: Array<Ball>): Boolean {
     var stopped = true
     var this_stopped = false
     for (index in 0..balls.size-1) {
-        if ((Math.abs(balls[index].velocity.x) < STOPPED) && (Math.abs(balls[index].velocity.y) < STOPPED)) {
-            this_stopped = true
-        } else {
-            this_stopped = false
-        }
+        this_stopped = (Math.abs(balls[index].velocity.x) < STOPPED) && (Math.abs(balls[index].velocity.y) < STOPPED)
         if (!this_stopped) stopped = false
     }
     return stopped
