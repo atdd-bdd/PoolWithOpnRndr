@@ -117,14 +117,19 @@ fun main() = application {
                     drawBall(balls[index].position, BALL_RADIUS, colors[balls[index].symbol])
                 }
                 if (moving) {
-                    // Compute the new position of the pool ball
-                    for (index in balls.indices) {
-                        balls[index].position = updatePosition(balls[index].position, balls[index].velocity)
-                        balls[index].velocity =
-                            checkCushion(balls[index].position, balls[index].velocity, tableUpperLeft, tableSize)
-                        balls[index].velocity = rollResistance(balls[index].velocity, rollingResistance)
+                    val loops = determineNumberLoops(balls)
+                    for (loop in 0 until loops) {
+                        // Compute the new position of the pool ball
+                        for (index in balls.indices) {
+                            balls[index].velocity =
+                                checkCushion(balls[index].position, balls[index].velocity, tableUpperLeft, tableSize, loops)
+                        }
+                        computeCollisions(balls, loops)
+                        for (index in balls.indices) {
+                            balls[index].velocity = rollResistance(balls[index].velocity, rollingResistance)
+                            balls[index].position = updatePosition(balls[index].position, balls[index].velocity, loops)
+                        }
                     }
-                    computeCollisions(balls)
                     if (stoppedMoving(balls)) {
                         moving = false
                     }
@@ -146,12 +151,34 @@ fun main() = application {
 
 }
 
-fun computeCollisions(balls: Array<Ball>) {
+fun determineNumberLoops(balls: Array<Ball>): Int {
+    var maximum= 0.0
+    for (index in balls.indices) {
+        val x = balls[index].velocity.x
+        val y = balls[index].velocity.y
+        if (x > maximum) maximum = x
+        if (y > maximum) maximum = y
+    }
+    var result = floor(maximum + 0.99999).toInt()
+    print (result.toString() + "\n")
+    if (result > 200) {
+        print ("limit")
+        result = 200
+    }
+    if (result < 1){
+        print("low")
+        result = 1
+    }
+
+            return result
+    }
+
+private fun computeCollisions(balls: Array<Ball>, loops : Int) {
     for (first in balls.indices) {
         for (second in first + 1 until balls.size) {
             val distance = computeDistance(balls[first].position, balls[second].position)
-            val nextFirstPosition = updatePosition(balls[first].position, balls[first].velocity)
-            val nextSecondPosition = updatePosition(balls[second].position, balls[second].velocity)
+            val nextFirstPosition = updatePosition(balls[first].position, balls[first].velocity, loops)
+            val nextSecondPosition = updatePosition(balls[second].position, balls[second].velocity, loops)
             val nextDistance = computeDistance(nextFirstPosition, nextSecondPosition)
             if ((distance <= 2 * BALL_RADIUS) || (nextDistance <= 2 * BALL_RADIUS)) {
                 val velocities: TwoVelocities = computeCollisionVelocity(
@@ -170,10 +197,7 @@ fun computeOverlap(balls: Array<Ball>) {
     for (first in balls.indices){
         for (second in first + 1 until balls.size){
             val distance = computeDistance(balls[first].position, balls[second].position)
-            if ((distance<= 2*BALL_RADIUS) /*&& (next_distance <= distance)*/) {
-                val velocities: TwoVelocities = computeCollisionVelocity(
-                    balls[first].position,
-                    balls[first].velocity, balls[second].position, balls[second].velocity)
+            if ((distance<= 2*BALL_RADIUS) ) {
                 balls[first].velocity = velocities.velocity1
                 balls[second].velocity = velocities.velocity2
             }
@@ -263,7 +287,7 @@ fun computeDistance(position1: Position, position2: Position): Double {
 
 fun stoppedMoving(balls: Array<Ball>): Boolean {
 
-    @Suppress("LocalVariableName") val STOPPED_SPEED = .01
+    @Suppress("LocalVariableName") val STOPPED_SPEED = .1
     var stopped = true
     var thisStopped: Boolean
     for (index in balls.indices) {
@@ -277,16 +301,16 @@ fun rollResistance(velocity: Velocity, rollingResistance: Double): Velocity {
     return Velocity(velocity.x * (1.0 - rollingResistance), velocity.y * (1.0 - rollingResistance))
 }
 
-fun checkCushion(position: Position, velocity: Velocity, tableUpperLeft: Vector2, tableSize: Vector2): Velocity {
+fun checkCushion(position: Position, velocity: Velocity, tableUpperLeft: Vector2, tableSize: Vector2, loops: Int): Velocity {
     var velocityX = velocity.x
     var velocityY = velocity.y
-    if (((position.x <= tableUpperLeft.x + BALL_RADIUS) && velocityX <= 0) ||
-        ((position.x >= tableUpperLeft.x + tableSize.x - BALL_RADIUS) && velocityX >= 0)
+    if (((position.x <= tableUpperLeft.x + BALL_RADIUS) && velocityX < 0) ||
+        ((position.x >= tableUpperLeft.x + tableSize.x - BALL_RADIUS) && velocityX > 0)
     ) {
         velocityX = -velocityX
     }
-    if (((position.y <= tableUpperLeft.y + BALL_RADIUS) && velocityY <= 0) ||
-        ((position.y >= tableUpperLeft.y + tableSize.y - BALL_RADIUS) && velocityY >= 0)
+    if (((position.y <= tableUpperLeft.y + BALL_RADIUS) && velocityY < 0) ||
+        ((position.y >= tableUpperLeft.y + tableSize.y - BALL_RADIUS) && velocityY > 0)
     ) {
         velocityY = -velocityY
     }
@@ -320,10 +344,10 @@ private fun Program.drawBall(position: Position, radius: Double, color: ColorRGB
     drawer.circle(positionV2, radius / 4)
 }
 
-private fun updatePosition(start: Position, speed: Velocity): Position {
+ fun updatePosition(start: Position, speed: Velocity, loops: Int): Position {
     val end = Position(0.0, 0.0)
-    end.x = start.x + speed.x
-    end.y = start.y + speed.y
+    end.x = start.x + speed.x / loops
+    end.y = start.y + speed.y / loops
     return end
 }
 
