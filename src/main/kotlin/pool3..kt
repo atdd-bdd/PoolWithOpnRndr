@@ -11,35 +11,36 @@ import org.openrndr.panel.elements.slider
 import org.openrndr.panel.layout
 import kotlin.math.*
 
-const val BALL_RADIUS = 10.0
+const val BALL_RADIUS = 10.00
 
 fun main() = application {
 // Define the initial velocity of the pool ball
     val balls = arrayOf(
-        Ball(0, Position(100.0, 200.0), Velocity(0.0, 0.0), true),
-        Ball(1, Position(150.0, 300.0), Velocity(0.0, 0.0), true),
-        Ball(2, Position(170.0, 300.0), Velocity(0.0, 0.0), true),
-        Ball(3, Position(190.0, 300.0), Velocity(0.0, 0.0), true),
-        Ball(4, Position(210.0, 300.0), Velocity(0.0, 0.0), true),
-        Ball(5, Position(230.0, 300.0), Velocity(0.0, 0.0), true),
-        Ball(6, Position(250.0, 300.0), Velocity(0.0, 0.0), true),
-        Ball(7, Position(150.0, 320.0), Velocity(0.0, 0.0), true),
-        Ball(8, Position(150.0, 340.0), Velocity(0.0, 0.0), true),
-        Ball(9, Position(150.0, 360.0), Velocity(0.0, 0.0), true),
-        Ball(10, Position(150.0, 380.0), Velocity(0.0, 0.0), true),
-        Ball(11, Position(150.0, 400.0), Velocity(0.0, 0.0), true),
-        Ball(12, Position(150.0, 420.0), Velocity(0.0, 0.0), true),
-        Ball(13, Position(150.0, 440.0), Velocity(0.0, 0.0), true),
-        Ball(14, Position(150.0, 460.0), Velocity(0.0, 0.0), true),
-        Ball(15, Position(150.0, 480.0), Velocity(0.0, 0.0), true),
+        Ball(0, Position(160.0, 200.0), Velocity(0.0, 0.0), true),
+        Ball(1, Position(200.0, 300.0), Velocity(0.0, 0.0), true),
+        Ball(2, Position(221.0, 300.0), Velocity(0.0, 0.0), true),
+        Ball(3, Position(242.0, 300.0), Velocity(0.0, 0.0), true),
+        Ball(4, Position(263.0, 300.0), Velocity(0.0, 0.0), true),
+        Ball(5, Position(284.0, 300.0), Velocity(0.0, 0.0), true),
+        Ball(6, Position(305.0, 300.0), Velocity(0.0, 0.0), true),
+        Ball(7, Position(150.0, 321.0), Velocity(0.0, 0.0), true),
+        Ball(8, Position(150.0, 342.0), Velocity(0.0, 0.0), true),
+        Ball(9, Position(150.0, 363.0), Velocity(0.0, 0.0), true),
+        Ball(10, Position(150.0, 384.0), Velocity(0.0, 0.0), true),
+        Ball(11, Position(150.0, 405.0), Velocity(0.0, 0.0), true),
+        Ball(12, Position(150.0, 300.0), Velocity(0.0, 0.0), true),
+        Ball(13, Position(400.0, 322.0), Velocity(0.0, 0.0), true),
+        Ball(14, Position(400.0, 344.0), Velocity(0.0, 0.0), true),
+        Ball(15, Position(400.0, 366.0), Velocity(0.0, 0.0), true),
     )
     // var previousBalls = balls.map{it.copy()}
-    var angle = 0.0
-    var force = 0.0
-
+    var cueAngle = 0.0
+    var cueForce = 0.0
+    var startingVelocity = Velocity(0.0, 0.0)
 // Define the rolling resistance of the pool ball
     var rollingResistance = 0.000001
-
+    var restitution = .95
+    var cushionElasticity = .95
 // Define the background color
 
     val colors = arrayOf(
@@ -50,8 +51,8 @@ fun main() = application {
         ColorRGBa.DARK_BLUE, ColorRGBa.DARK_CYAN, ColorRGBa.DARK_BLUE,
         ColorRGBa.AQUA
     )
-    val tableUpperLeft = Vector2(0.0, 150.0)
-    val tableSize = Vector2(1000.0, 550.0)
+    val tableUpperLeft = Vector2(20.0, 200.0)
+    val tableSize = Vector2(900.0, 450.0)
     configure {
         width = 1000
         height = 700
@@ -75,6 +76,7 @@ fun main() = application {
                     backgroundColor = ColorRGBa.RED
                     clicked {
                         moving = !moving
+                        hitCue(balls, startingVelocity)
                         // if (moving)
                         //previousBalls = balls.map{it.copy()}
                     }
@@ -94,18 +96,18 @@ fun main() = application {
                     height = 60
                     width = 200
                     label = "force"
-                    value = force
+                    value = cueForce
                     range = Range(0.0, 100.0)
-                    events.valueChanged.listen { force = it.newValue }
+                    events.valueChanged.listen { cueForce = it.newValue }
                 }
                 slider {
                     backgroundColor = ColorRGBa.GREEN
                     height = 60
                     width = 200
                     label = "angle"
-                    value = angle
+                    value = cueAngle
                     range = Range(0.0, 360.0)
-                    events.valueChanged.listen { angle = it.newValue }
+                    events.valueChanged.listen { cueAngle = it.newValue }
                 }
             }
 
@@ -114,34 +116,18 @@ fun main() = application {
             extend {
                 drawTable(tableUpperLeft, tableSize)
                 for (index in balls.indices) {
-                    drawBall(balls[index].position, BALL_RADIUS, colors[balls[index].symbol])
+                    drawBall(balls[index].position, BALL_RADIUS, colors[balls[index].symbol], tableUpperLeft)
                 }
                 if (moving) {
-                    val loops = determineNumberLoops(balls)
-                    for (loop in 0 until loops) {
-                        // Compute the new position of the pool ball
-                        for (index in balls.indices) {
-                            balls[index].velocity =
-                                checkCushion(balls[index].position, balls[index].velocity, tableUpperLeft, tableSize, loops)
-                        }
-                        computeCollisions(balls, loops)
-                        for (index in balls.indices) {
-                            balls[index].velocity = rollResistance(balls[index].velocity, rollingResistance)
-                            balls[index].position = updatePosition(balls[index].position, balls[index].velocity, loops)
-                        }
-                    }
+                    moveBalls(balls, tableSize, cushionElasticity, restitution, rollingResistance)
                     if (stoppedMoving(balls)) {
                         moving = false
                     }
                 } else {
-                    val start = Vector2(balls[0].position.x, balls[0].position.y)
-                    val percentage: Percentage = xyFromAngle(angle)
-                    val xDiff = force * percentage.x * 100.0
-                    val yDiff = force * percentage.y * 100.0
-                    val end = Vector2(start.x + xDiff, start.y + yDiff)
-                    balls[0].velocity.x = force * percentage.x
-                    balls[0].velocity.y = force * percentage.y
-                    drawer.lineSegment(start, end)
+                    val percentage: Percentage = xyFromAngle(cueAngle)
+                    startingVelocity = Velocity(cueForce * percentage.x,cueForce * percentage.y )
+                    drawCueLine(balls, tableUpperLeft, cueForce, percentage)
+
                 }
                 // Update the position of the pool ball
             }
@@ -149,6 +135,47 @@ fun main() = application {
     }
 
 
+}
+
+private fun Program.drawCueLine(
+    balls: Array<Ball>,
+    tableUpperLeft: Vector2,
+    cueForce: Double,
+    percentage: Percentage
+) {
+    val start = Vector2(balls[0].position.x + tableUpperLeft.x, balls[0].position.y + tableUpperLeft.y)
+    val xDiff = cueForce * percentage.x * 100.0
+    val yDiff = cueForce * percentage.y * 100.0
+    val end = Vector2(start.x + xDiff, start.y + yDiff)
+    drawer.strokeWeight = cueForce
+    drawer.lineSegment(start, end)
+}
+
+private fun moveBalls(
+    balls: Array<Ball>,
+    tableSize: Vector2,
+    cushionElasticity: Double,
+    restitution: Double,
+    rollingResistance: Double
+) {
+    var loops = determineNumberLoops(balls)
+    loops = 100
+    for (loop in 0 until loops) {
+        // Compute the new position of the pool ball
+        for (index in balls.indices) {
+            balls[index].velocity =
+                checkCushion(balls[index].position, balls[index].velocity, tableSize, cushionElasticity)
+        }
+        computeCollisions(balls, restitution)
+        for (index in balls.indices) {
+            balls[index].velocity = rollResistance(balls[index].velocity, rollingResistance, loops)
+            balls[index].position = updatePosition(balls[index].position, balls[index].velocity, loops)
+        }
+    }
+}
+
+fun hitCue(balls: Array<Ball>, startingVelocity: Velocity){
+    balls[0].velocity = startingVelocity
 }
 
 fun determineNumberLoops(balls: Array<Ball>): Int {
@@ -173,18 +200,15 @@ fun determineNumberLoops(balls: Array<Ball>): Int {
             return result
     }
 
-private fun computeCollisions(balls: Array<Ball>, loops : Int) {
+private fun computeCollisions(balls: Array<Ball>, restitution: Double) {
     for (first in balls.indices) {
         for (second in first + 1 until balls.size) {
             val distance = computeDistance(balls[first].position, balls[second].position)
-            val nextFirstPosition = updatePosition(balls[first].position, balls[first].velocity, loops)
-            val nextSecondPosition = updatePosition(balls[second].position, balls[second].velocity, loops)
-            val nextDistance = computeDistance(nextFirstPosition, nextSecondPosition)
-            if ((distance <= 2 * BALL_RADIUS) || (nextDistance <= 2 * BALL_RADIUS)) {
-                val velocities: TwoVelocities = computeCollisionVelocity(
+            if (distance <= 2 * BALL_RADIUS) {
+                 val velocities: TwoVelocities = computeCollisionVelocity(
                     balls[first].position,
-                    balls[first].velocity, balls[second].position, balls[second].velocity
-                )
+                    balls[first].velocity, balls[second].position, balls[second].velocity,
+               restitution )
                 balls[first].velocity = velocities.velocity1
                 balls[second].velocity = velocities.velocity2
             }
@@ -214,11 +238,11 @@ fun computeTotalVelocity(velocity: Velocity): Double {
 @Suppress("ReplaceWithOperatorAssignment", "LocalVariableName")
 fun computeCollisionVelocity(
     position1: Position, velocity1: Velocity,
-    position2: Position, velocity2: Velocity
+    position2: Position, velocity2: Velocity, restitution: Double
 ):
         TwoVelocities {
 
-    val R1 = 1.0
+
     val m1 = 1.0
     val m2 = 1.0
     val x1 = position1.x
@@ -240,8 +264,7 @@ fun computeCollisionVelocity(
     val vy_cm = (m1 * vy1 + m2 * vy2) / (m1 + m2)
 
 
-//     *** return old velocities if balls are not approaching ***
-    // if ( (vx21*x21 + vy21*y21) >= 0) return;
+    if ( (vx21*x21 + vy21*y21) >= 0) return TwoVelocities(velocity1, velocity2)
 
 
 //     *** I have inserted the following statements to avoid a zero divide;
@@ -270,10 +293,10 @@ fun computeCollisionVelocity(
     vy1 = vy1 - a * m21 * dvx2
 
 //     ***  velocity correction for inelastic collisions ***
-    vx1 = (vx1 - vx_cm) * R1 + vx_cm
-    vy1 = (vy1 - vy_cm) * R1 + vy_cm
-    vx2 = (vx2 - vx_cm) * R1 + vx_cm
-    vy2 = (vy2 - vy_cm) * R1 + vy_cm
+    vx1 = (vx1 - vx_cm) * restitution + vx_cm
+    vy1 = (vy1 - vy_cm) * restitution + vy_cm
+    vx2 = (vx2 - vx_cm) * restitution + vx_cm
+    vy2 = (vy2 - vy_cm) * restitution + vy_cm
     return TwoVelocities(Velocity(vx1, vy1), Velocity(vx2, vy2))
 }
 
@@ -297,20 +320,21 @@ fun stoppedMoving(balls: Array<Ball>): Boolean {
     return stopped
 }
 
-fun rollResistance(velocity: Velocity, rollingResistance: Double): Velocity {
-    return Velocity(velocity.x * (1.0 - rollingResistance), velocity.y * (1.0 - rollingResistance))
+fun rollResistance(velocity: Velocity, rollingResistance: Double, loops:Int): Velocity {
+    return Velocity(velocity.x * (1.0 - rollingResistance/loops), velocity.y * (1.0 - rollingResistance/loops))
 }
 
-fun checkCushion(position: Position, velocity: Velocity, tableUpperLeft: Vector2, tableSize: Vector2, loops: Int): Velocity {
+fun checkCushion(position: Position, velocity: Velocity, tableSize: Vector2,
+                 cushionElasticity: Double): Velocity {
     var velocityX = velocity.x
     var velocityY = velocity.y
-    if (((position.x <= tableUpperLeft.x + BALL_RADIUS) && velocityX < 0) ||
-        ((position.x >= tableUpperLeft.x + tableSize.x - BALL_RADIUS) && velocityX > 0)
+    if (((position.x <= 0.0 + BALL_RADIUS) && velocityX < 0) ||
+        ((position.x >= tableSize.x - BALL_RADIUS) && velocityX > 0)
     ) {
         velocityX = -velocityX
     }
-    if (((position.y <= tableUpperLeft.y + BALL_RADIUS) && velocityY < 0) ||
-        ((position.y >= tableUpperLeft.y + tableSize.y - BALL_RADIUS) && velocityY > 0)
+    if (((position.y <= 0.0 + BALL_RADIUS) && velocityY < 0) ||
+        ((position.y >= tableSize.y - BALL_RADIUS) && velocityY > 0)
     ) {
         velocityY = -velocityY
     }
@@ -322,7 +346,7 @@ private fun Program.drawTable(tableUpperLeft: Vector2, tableSize: Vector2) {
     drawer.fill = ColorRGBa.PURPLE
     drawer.stroke = ColorRGBa.GREEN_YELLOW
     val tableLowerRight = Vector2(tableUpperLeft.x + tableSize.x, tableUpperLeft.y + tableSize.y)
-    drawer.rectangle(tableUpperLeft.x, tableUpperLeft.y, tableLowerRight.x, tableLowerRight.y)
+    drawer.rectangle(tableUpperLeft.x, tableUpperLeft.y, tableSize.x,tableSize.y)
     val tableUpperRight = Vector2(tableLowerRight.x, tableUpperLeft.y)
     val tableLowerLeft = Vector2(tableUpperLeft.x, tableLowerRight.y)
     drawer.lineSegment(tableUpperRight, tableUpperLeft)
@@ -331,9 +355,12 @@ private fun Program.drawTable(tableUpperLeft: Vector2, tableSize: Vector2) {
     drawer.lineSegment(tableLowerLeft, tableUpperLeft)
 }
 
-private fun Program.drawBall(position: Position, radius: Double, color: ColorRGBa) {
+private fun Program.drawBall(position: Position, radius: Double, color: ColorRGBa,
+                             tableUpperLeft: Vector2) {
     drawer.fill = color
-    val positionV2 = position.toVector2()
+    val positionV1 = position.toVector2()
+    val positionV2 = Vector2(positionV1.x + tableUpperLeft.x,
+             positionV1.y + tableUpperLeft.y)
     drawer.circle(positionV2, radius)
 
     // Draw the three circles marking the pool ball

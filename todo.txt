@@ -1,0 +1,27 @@
+
+Add a check for energy and momentum - report if increased over initial energy when cue is struck
+
+Somehow energy is being added.   Do a check in collisions, movement, and cushions ****
+
+Switch to GUI for OpenRndr
+
+Add sliders for elasticity, restitution
+
+Add a "tweaker" for the angle
+
+Add button to do a "replay"
+
+Add button to do a pause (should have a  hit and a pause button)
+
+Add "games" with different number of balls and different values
+
+Add dropdown list to select a game - standard, other
+
+Add the pockets - show the circles.  A line segment over each.
+    CheckForPocket - if position of ball croses the line segment, then
+        set inactive.
+    For each ball loop, continue if inactive
+
+When "stopped", set all velocities to zero
+
+s
