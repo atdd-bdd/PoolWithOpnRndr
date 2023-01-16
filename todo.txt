@@ -1,11 +1,22 @@
 
 Add a check for energy and momentum - report if increased over initial energy when cue is struck
 
-Somehow energy is being added.   Do a check in collisions, movement, and cushions ****
+Check for position+velocity/loop post collision to see if still in collision.  If so, then move balls out of collision range by
+incrementing both by that amount -  may do this in loop upto 10 times to make sure they aren't sill in collision
+Print out if collision returns
 
-Switch to GUI for OpenRndr
 
-Add sliders for elasticity, restitution
+Switch to GUI for OpenRndr -  that doesn't work !!!
+
+Add sliders for elasticity, restitution - not enough room
+
+Make variables out of all constants ,   force, etc.
+
+Change force to a color change
+
+Use table size to compute the other display values
+
+
 
 Add a "tweaker" for the angle
 

@@ -1,0 +1,59 @@
+/*
+fun determineNumbersegments(balls: Array<Ball>): Int {
+    var maximum= 0.0
+    for (index in balls.indices) {
+        val x = balls[index].velocity.x
+        val y = balls[index].velocity.y
+        if (x > maximum) maximum = x
+        if (y > maximum) maximum = y
+    }
+    var result = floor(maximum + 0.99999).toInt()
+    if (result > 200) {
+        print ("limit\n")
+        result = 200
+    }
+    if (result < 1){
+        print("low\n")
+        result = 1
+    }
+
+            return result
+    }
+
+
+
+fun computeOverlap(balls: Array<Ball>) : Boolean {
+    var result = false
+    for (first in balls.indices) {
+        for (second in first + 1 until balls.size) {
+            val distance: Double = computeDistanceSquared(balls[first].position, balls[second].position)
+            if ((distance <= (2 * BALL_RADIUS) * (2 * BALL_RADIUS))) {
+                result = true
+
+            }
+        }
+    }
+    return result
+
+}
+
+
+                dropdownButton {
+                    label = "Option"
+                    item {
+                        label = "Item 1"
+                        events.picked.listen {
+                            println("you picked item 1")
+                        }
+                    }
+
+                    item {
+                        label = "Item 2"
+                        events.picked.listen {
+                            println("you picked item 2")
+                        }
+                    }
+                } // end dropdown
+
+
+*/
