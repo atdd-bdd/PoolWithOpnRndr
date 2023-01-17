@@ -15,10 +15,13 @@ import org.openrndr.panel.styleSheet
 const val BALL_RADIUS = 10.00
 val tableSize = Vector2(900.0, 450.0)
 
+private const val NOT_ON_BALL = -1
+
 fun main() = application {
 // Define the initial velocity of the pool ball
     var balls: Array<Ball> = initialBalls()
     // var previousBalls = balls.map{it.copy()}
+    @Suppress("LocalVariableName", "LocalVariableName", "LocalVariableName")
     val MINIMUM_RESISTANCE = 0.0
     val MAXIMUM_RESISTANCE = 0.05
     val MAXIMUM_FORCE = 100.0
@@ -37,10 +40,30 @@ fun main() = application {
     configure {
         width = 1000
         height = 700
+        title = "Pool"
     }
     program {
         // Create a control manager to manage the user interface
         var moving = false
+        var ballMoving = NOT_ON_BALL
+        mouse.buttonDown.listen {
+            //print( it.position.toString() + "\n")
+            ballMoving = whichBallToMove(it.position, balls, tableUpperLeft)
+            if (ballMoving != NOT_ON_BALL) {
+                balls[ballMoving].velocity = Velocity(0.0, 0.0)
+                balls[ballMoving].active = true
+            }
+        }
+        mouse.buttonUp.listen {
+            //print( it.position.toString() + "\n")
+            ballMoving = NOT_ON_BALL
+        }
+        mouse.dragged.listen {
+            if (ballMoving != NOT_ON_BALL)
+                balls[ballMoving].position =
+                    Position(it.position.x - tableUpperLeft.x, it.position.y - tableUpperLeft.y)
+            //print(it.position.toString() + "\n")
+        }
         extend(ControlManager()) {
             // Create a horizontal layout to hold the controls
             layout {
@@ -57,7 +80,7 @@ fun main() = application {
                             moving = true
                             val segmentsPossibly = totalVelocity(startingVelocity) / 0.1
                             print(
-                                " Possible segments " + segmentsPossibly.toString() + " velocity " + startingVelocity + "\n"
+                                " Possible segments $segmentsPossibly velocity $startingVelocity\n"
                             )
                             segments = 100
                             previousBalls = balls.map { it.copy() }
@@ -95,7 +118,7 @@ fun main() = application {
                     events.valueChanged.listen { cueForce = it.newValue }
                 }
                 slider {
-                    backgroundColor = ColorRGBa.GREEN
+                    backgroundColor = ColorRGBa.WHITE
                     height = 60
                     width = 200
                     label = "Angle"
@@ -113,25 +136,41 @@ fun main() = application {
                     moveBalls(balls, tableSize, cushionElasticity, restitution, rollingResistance, segments)
                     if (stoppedMoving(balls)) {
                         moving = false
+                        stopAll(balls)
                     }
                 } else {
                     val percentage: Percentage = xyFromAngle(cueAngle)
                     startingVelocity = Velocity(cueForce * percentage.x, cueForce * percentage.y)
-                    drawCueLine(balls, tableUpperLeft, cueForce/MAXIMUM_FORCE, percentage, tableSize.x)
+                    drawCueLine(balls, tableUpperLeft, cueForce / MAXIMUM_FORCE, percentage, tableSize.x)
                 }
             }
         }
     }
 }
 
+fun whichBallToMove(vector: Vector2, balls: Array<Ball>, tableUpperLeft: Vector2): Int {
+    var whichBall = NOT_ON_BALL
+    val position = Position(vector.x - tableUpperLeft.x, vector.y - tableUpperLeft.y)
+    for (index in balls.indices) {
+        if (computeDistanceSquared(position, balls[index].position) <
+            ((2 * BALL_RADIUS) * (2 * BALL_RADIUS))
+        ) {
+            whichBall = index
+            break
+        }
+
+    }
+
+    return whichBall
+
+}
+
 fun restoreBalls(previousBalls: List<Ball>): Array<Ball> {
     val size = previousBalls.size
     val initBall = Ball(1, Position(0.0, 0.0), Velocity(0.0, 0.0), true)
-    var balls  = Array<Ball>(size)  { i -> initBall}
-    var index = 0
-    for (ball in previousBalls){
+    var balls = Array<Ball>(size) { i -> initBall }
+    for ((index, ball) in previousBalls.withIndex()) {
         balls[index] = ball
-        index++
     }
     return balls
 
@@ -175,7 +214,7 @@ private fun Program.drawCueLine(
     val xDiff = length * percentage.x
     val yDiff = length * percentage.y
     val end = Vector2(start.x + xDiff, start.y + yDiff)
-    drawer.fill = ColorRGBa(.5, .5, cueForce )
+    drawer.fill = ColorRGBa(.5, .5, cueForce)
     drawer.lineSegment(start, end)
 }
 
@@ -202,7 +241,7 @@ private fun Program.drawTable(tableUpperLeft: Vector2, tableSize: Vector2) {
     drawer.strokeWeight = 4.0
 
     drawPocketLine(pockets.topSidePocket, tableUpperLeft)
-    drawPocketLine(pockets.bottomSidePocket,tableUpperLeft)
+    drawPocketLine(pockets.bottomSidePocket, tableUpperLeft)
     drawPocketLine(pockets.bottomLeftPocketBottom, tableUpperLeft)
     drawPocketLine(pockets.bottomLeftPocketLeft, tableUpperLeft)
     drawPocketLine(pockets.bottomRightPocketRight, tableUpperLeft)
@@ -213,10 +252,11 @@ private fun Program.drawTable(tableUpperLeft: Vector2, tableSize: Vector2) {
     drawPocketLine(pockets.topRightPocketRight, tableUpperLeft)
 
 }
-private fun Program.drawPocketLine(lineSegment: LineSegment, tableUpperLeft : Vector2)
-{
+
+private fun Program.drawPocketLine(lineSegment: LineSegment, tableUpperLeft: Vector2) {
     drawer.lineSegment(lineSegment.start + tableUpperLeft, lineSegment.end + tableUpperLeft)
 }
+
 private fun Program.drawBall(
     position: Position, radius: Double, color: ColorRGBa, tableUpperLeft: Vector2
 ) {

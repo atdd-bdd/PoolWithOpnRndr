@@ -96,7 +96,7 @@ fun main() = application {
                 else
                 {
                     val start: Vector2 = Vector2(POSITION.x, POSITION.y)
-                    val percentage: Percentage = xyFromAngle(angle)
+                    val percentage: Percentage = xyFromAngle2(angle)
                     val x_diff = force * percentage.x * 100.0
                     val y_diff = force * percentage.y * 100.0
                     var end = Vector2(start.x + x_diff, start.y + y_diff)
@@ -112,6 +112,7 @@ fun main() = application {
 
 }
 
+@Suppress("SameParameterValue")
 private fun Program.drawBall(POSITION: Position, RADIUS: Double) {
     val positionV2 = POSITION.toVector2()
     drawer.circle(positionV2, RADIUS)
@@ -131,7 +132,7 @@ private fun updatePosition(start : Position, speed: Velocity): Position{
     return end
 }
 
-private fun xyFromAngle( angle : Double) : Percentage {
+private fun xyFromAngle2( angle : Double) : Percentage {
     var  result = Percentage(0.0, 0.0)
     val radians = angle * PI / 180.0
     result.x = Math.sin(radians)

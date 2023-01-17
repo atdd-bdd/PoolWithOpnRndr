@@ -11,8 +11,9 @@ class Pockets {
     var bottomLeftPocketLeft = LineSegment(Vector2(0.0, 0.0), Vector2(0.0, 0.0))
     var bottomRightPocketRight = LineSegment(Vector2(0.0, 0.0), Vector2(0.0, 0.0))
     var bottomRightPocketBottom = LineSegment(Vector2(0.0, 0.0), Vector2(0.0, 0.0))
-    val SIDE_POCKET_LENGTH = 50.0
-    val CORNER_POCKET_LENGTH = 50.0
+    @Suppress("PropertyName", "PropertyName")
+    private val SIDE_POCKET_LENGTH = 50.0
+    private val CORNER_POCKET_LENGTH = 50.0
     init{
         val centerX= tableSize.x / 2
 

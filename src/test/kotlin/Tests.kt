@@ -22,18 +22,18 @@ class Tests {
         for (i in 0..1) {
             val startEnergy = computeTotalEnergy(velocity1, velocity2)
             val startMomentum = computeTotalMomentum(velocity1, velocity2)
-            print("Start " + velocity1.toString() + "   " + velocity2.toString() + "   " + "\n")
+            print("Start $velocity1   $velocity2   \n")
             val velocities: TwoVelocities = computeCollisionVelocity(
                 position1, velocity1, position2, velocity2, 1.0
             )
             val endEnergy =   computeTotalEnergyTV(velocities)
             val endMomentum = computeTotalMomentumTV(velocities)
            // assert(endEnergy <= startEnergy && endMomentum <= startMomentum)
-            print("Start " + velocity1.toString() + "   " + velocity2.toString() + "   " + "\n")
-            print(startEnergy.toString() + " " + startMomentum.toString() + "\n")
+            print("Start $velocity1   $velocity2   \n")
+            print("$startEnergy $startMomentum\n")
             print("End " + velocities.velocity1.toString() + "   " +
                     velocities.velocity2.toString() + "   " + "\n")
-            print(endEnergy.toString() + " " + endMomentum.toString() + "\n")
+            print("$endEnergy $endMomentum\n")
         }
     }
 }
