@@ -1,4 +1,4 @@
-data class Velocity(var x: Double, var y: Double){
+data class Velocity(val x: Double, val y: Double){
     override fun toString(): String {
         return "Velocity($x,$y)"
     }

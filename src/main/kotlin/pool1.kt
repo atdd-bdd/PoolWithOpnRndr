@@ -20,11 +20,7 @@
     // Define the initial position of the pool ball
     var POSITION = Vector2(100.0, 100.0)
 
-    // Define the rolling resiDstance of the pool ball
-    val R = 0.3
 
-    // Define the background color
-    val BACKGROUND_COLOR = ColorRGBa.GREEN
 
     fun main() = application {
         configure {

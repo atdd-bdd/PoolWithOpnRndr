@@ -4,7 +4,6 @@
 import org.openrndr.Program
 import org.openrndr.application
 import org.openrndr.color.ColorRGBa
-import org.openrndr.extra.color.presets.GREEN_YELLOW
 import org.openrndr.extra.color.presets.WHEAT
 import org.openrndr.math.Vector2
 import org.openrndr.panel.ControlManager
@@ -14,23 +13,23 @@ import org.openrndr.panel.elements.clicked
 import org.openrndr.panel.elements.slider
 import org.openrndr.panel.layout
 import kotlin.math.PI
+import kotlin.math.cos
+import kotlin.math.sin
 
 
 fun main() = application {
 // Define the initial velocity of the pool ball
      var velocity = Velocity(0.0, 0.0)
 // Define the radius of the pool ball
-    val RADIUS = 10.0
+    val rADIUS = 10.0
 
 // Define the initial position of the pool ball
-    var POSITION = Position(100.0, 100.0)
+    var position = Position(100.0, 100.0)
     var angle = 0.0
     var force = 0.0
 // Define the rolling resiDstance of the pool ball
-    var R = 0.3
+    var rR = 0.3
 
-// Define the background color
-    val BACKGROUND_COLOR = ColorRGBa.GREEN_YELLOW
     configure {
         width = 1000
         height = 700
@@ -60,9 +59,9 @@ fun main() = application {
                     height = 60
                     width = 200
                     label = "rolling resistance"
-                    value = R
+                    value = rR
                     range = Range(0.0, 1.0)
-                    events.valueChanged.listen { R = it.newValue }
+                    events.valueChanged.listen { rR = it.newValue }
                 }
                 slider {
                     backgroundColor = ColorRGBa.BLUE
@@ -88,20 +87,19 @@ fun main() = application {
             // Draw the pool ball
             extend {
                 drawer.fill = ColorRGBa.BLUE
-                drawBall(POSITION, RADIUS)
+                drawBall(position, rADIUS)
                 if (moving) {
                     // Compute the new position of the pool ball
-                    POSITION = updatePosition(POSITION, velocity)
+                    position = updatePosition(position, velocity)
                 }
                 else
                 {
-                    val start: Vector2 = Vector2(POSITION.x, POSITION.y)
+                    val start = Vector2(position.x, position.y)
                     val percentage: Percentage = xyFromAngle2(angle)
-                    val x_diff = force * percentage.x * 100.0
-                    val y_diff = force * percentage.y * 100.0
-                    var end = Vector2(start.x + x_diff, start.y + y_diff)
-                    velocity.x = force * percentage.x
-                    velocity.y = force * percentage.y
+                    val xDiff = force * percentage.x * 100.0
+                    val yDiff = force * percentage.y * 100.0
+                    val end = Vector2(start.x + xDiff, start.y + yDiff)
+                    velocity = Velocity(force * percentage.x, force * percentage.y)
                     drawer.lineSegment(start, end)
                 }
                 // Update the position of the pool ball
@@ -112,31 +110,28 @@ fun main() = application {
 
 }
 
-@Suppress("SameParameterValue")
-private fun Program.drawBall(POSITION: Position, RADIUS: Double) {
-    val positionV2 = POSITION.toVector2()
-    drawer.circle(positionV2, RADIUS)
+
+private fun Program.drawBall(position: Position, radius: Double) {
+    val positionV2 = position.toVector2()
+    drawer.circle(positionV2, radius)
 
     // Draw the three circles marking the pool ball
     drawer.fill = ColorRGBa.WHEAT
     drawer.stroke = ColorRGBa.WHITE
-    drawer.circle(positionV2, RADIUS)
-    drawer.circle(positionV2, RADIUS / 2)
-    drawer.circle(positionV2, RADIUS / 4)
+    drawer.circle(positionV2, radius)
+    drawer.circle(positionV2, radius / 2)
+    drawer.circle(positionV2, radius / 4)
 }
 
 private fun updatePosition(start : Position, speed: Velocity): Position{
-    var end: Position = Position (0.0,0.0)
-    end.x = start.x + speed.x
-    end.y = start.y + speed.y
-    return end
+    return Position (start.x + speed.x, start.y + speed.y)
 }
 
 private fun xyFromAngle2( angle : Double) : Percentage {
-    var  result = Percentage(0.0, 0.0)
+    val result = Percentage(0.0, 0.0)
     val radians = angle * PI / 180.0
-    result.x = Math.sin(radians)
-    result.y = Math.cos(radians)
+    result.x = sin(radians)
+    result.y = cos(radians)
     return result
 }
 

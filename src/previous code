@@ -27,7 +27,7 @@ fun computeOverlap(balls: Array<Ball>) : Boolean {
     for (first in balls.indices) {
         for (second in first + 1 until balls.size) {
             val distance: Double = computeDistanceSquared(balls[first].position, balls[second].position)
-            if ((distance <= (2 * BALL_RADIUS) * (2 * BALL_RADIUS))) {
+            if ((distance <= BALL_DIAMETER_SQUARED)) {
                 result = true
 
             }

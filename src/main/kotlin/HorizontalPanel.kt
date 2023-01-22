@@ -2,8 +2,8 @@
 import org.openrndr.application
 import org.openrndr.color.ColorRGBa
 import org.openrndr.extensions.SingleScreenshot
-import org.openrndr.math.Spherical
-import org.openrndr.math.Vector3
+import org.openrndr.extra.color.presets.AZURE
+import org.openrndr.extra.color.presets.DARK_BLUE
 import org.openrndr.panel.controlManager
 import org.openrndr.panel.elements.*
 import org.openrndr.panel.style.*
@@ -16,12 +16,16 @@ fun main() = application {
                 this.outputFile = System.getProperty("screenshotPath")
             }
         }
-        var rollingResistance = 0.0
+        val rollingResistance1 = 0.0
+        var rollingResistance2 = 0.0
+        val rollingResistance3 = 0.0
+        val rollingResistance4 = 0.0
         val cm = controlManager {
             styleSheet(has class_ "horizontal") {
                 paddingLeft = 10.px
                 paddingTop = 10.px
-
+                backgroundColor = ColorRGBa.MAGENTA
+                background = Color.RGBa(ColorRGBa.MAGENTA)
                 // ----------------------------------------------
                 // The next two lines produce a horizontal layout
                 // ----------------------------------------------
@@ -30,63 +34,44 @@ fun main() = application {
                 width = 100.percent
             }
 
-            styleSheet(has type "h1") {
-                marginTop = 10.px
-                marginLeft = 7.px
-                marginBottom = 10.px
-            }
+
 
             layout {
-                val header = h1 { "click a button..." }
+
 
                 div("horizontal") {
-                    // A bunch of names for generating buttons
-                    listOf("load", "save", "redo", "stretch", "bounce",
-                        "twist")
-                        .forEachIndexed { i, word ->
 
-                            // A fun way of generating a set of colors
-                            // of similar brightness:
-                            // Grab a point on the surface of a sphere
-                            // and treat its coordinates as an rgb color.
-                            val pos = Vector3.fromSpherical(
-                                Spherical(i * 19.0, i * 17.0, 0.4))
-                            val rgb = ColorRGBa.fromVector(pos + 0.4)
+                    button1()
 
-                            button {
-                                label = word
-                                style = styleSheet {
-                                    // Use Color.RGBa() to convert a ColorRGBa
-                                    // color (the standard color datatype)
-                                    // into "CSS" format:
-                                    background = Color.RGBa(rgb)
-                                }
-                                 // When the button is clicked replace
-                                // the header text with the button's label
-                                events.clicked.listen {
-                                    header.replaceText(it.source.label)
-                                }
-                            }
+                    button1()
+                    textfield {
 
-                        }
+                        value = "This value"
+                        label = "Value"
+                    }
                 }
                 div("horizontal") {
-                    slider {
-                        backgroundColor = ColorRGBa.BLUE
-                        height = 60
-                        width = 200
-                        label = "Rolling Resistance"
-                        value = rollingResistance
-                        range = Range(1.0, 2.0)
-                    }
-                    slider {
-                        backgroundColor = ColorRGBa.BLUE
-                        height = 60
-                        width = 200
-                        label = "Rolling Resistance"
-                        value = rollingResistance
-                        range = Range(1.0, 2.0)
-                    }
+
+                       slider {
+                           style = styleSheet {
+                               // Use Color.RGBa() to convert a ColorRGBa
+                               // color (the standard color datatype)
+                               // into "CSS" format:
+                               color = Color.RGBa(ColorRGBa.AZURE)
+                               background = Color.RGBa(ColorRGBa.DARK_BLUE)
+                               // height = 60.px
+                               width = 300.px
+                           }
+                           label = "Rolling Resistance"
+                           value = rollingResistance1
+                           range = Range(1.0, 2.0)
+                       }
+
+                    rollingResistance2 =  slider1(rollingResistance2)
+                }
+                div("horizontal") {
+                    slider2(rollingResistance3)
+                    slider3(rollingResistance4)
                 }
 
             }
@@ -94,6 +79,92 @@ fun main() = application {
         extend(cm)
         extend {
             drawer.clear(0.2, 0.18, 0.16, 1.0)
+            print (rollingResistance1)
+            print("\n")
+            print (rollingResistance2)
+            print("\n")
+        }
+    }
+}
+
+private fun Div.slider3(rollingResistance: Double) {
+    slider {
+        style = styleSheet {
+            // Use Color.RGBa() to convert a ColorRGBa
+            // color (the standard color datatype)
+            // into "CSS" format:
+            color = Color.RGBa(ColorRGBa.AZURE)
+            background = Color.RGBa(ColorRGBa.DARK_BLUE)
+            //height = 40.px
+            width = 100.px
+        }
+        label = "Something Else "
+        value = rollingResistance
+        range = Range(1.0, 2.0)
+    }
+}
+
+private fun Div.slider2(rollingResistance: Double) {
+    slider {
+        style = styleSheet {
+            // Use Color.RGBa() to convert a ColorRGBa
+            // color (the standard color datatype)
+            // into "CSS" format:
+            color = Color.RGBa(ColorRGBa.AZURE)
+            background = Color.RGBa(ColorRGBa.DARK_BLUE)
+            //height = 60.px
+            width = 100.px
+        }
+        label = "Rolling Resistance"
+        value = rollingResistance
+        range = Range(1.0, 2.0)
+    }
+}
+
+private fun Div.slider1(rollingResistance: Double) : Double {
+    val thisValue = rollingResistance
+    slider {
+        style = styleSheet {
+            // Use Color.RGBa() to convert a ColorRGBa
+            // color (the standard color datatype)
+            // into "CSS" format:
+            color = Color.RGBa(ColorRGBa.AZURE)
+            background = Color.RGBa(ColorRGBa.DARK_BLUE)
+            //height = 60.px
+            width = 100.px
+        }
+        value = thisValue
+        label = "Something Else "
+         range = Range(1.0, 2.0)
+    }
+    return thisValue
+}
+
+@Suppress("unused")
+private fun Div.textField() {
+    textfield {
+        style = styleSheet {
+            background = Color.RGBa(ColorRGBa.WHITE)
+            height = 40.px
+            width = 100.px
+            color = Color.RGBa(ColorRGBa.CYAN)
+        }
+        value = "This value"
+        label = "Value"
+    }
+}
+
+private fun Div.button1() {
+    button {
+        label = "help"
+        style = styleSheet {
+            // Use Color.RGBa() to convert a ColorRGBa
+            // color (the standard color datatype)
+            // into "CSS" format:
+            background = Color.RGBa(ColorRGBa.GRAY)
+            // height = 40.px
+            width = 75.px
+            color = Color.RGBa(ColorRGBa.CYAN)
         }
     }
 }
