@@ -17,18 +17,18 @@ val TABLE_SIZE = Vector2(900.0, 450.0)
 private const val MOUSE_NOT_ON_BALL = -1
 
 fun main() = application {
-    val mINIMUM_RESISTANCE = 0.0
-    val mAXIMUM_RESISTANCE = 0.05
-    val mAXIMUM_CUSHION_ELASTICITY = 1.0
-    val mAXIMUM_RESTITUTION = 1.0
-    val mAXIMUM_FORCE = 100.0
+    val MINIMUM_RESISTANCE = 0.0
+    val MAXIMUM_RESISTANCE = 0.05
+    val MAXIMUM_CUSHION_ELASTICITY = 1.0
+    val MAXIMUM_RESTITUTION = 1.0
+    val MAXIMUM_FORCE = 100.0
 
     var cueAngle = 0.0
     var cueForce = 0.0
 
     var startingVelocity = Velocity(0.0, 0.0)
 
-    var rollingResistance = 0.02
+    var rollingResistance = 0.01
     var restitution = 0.95
     var cushionElasticity = 0.70
 
@@ -139,7 +139,7 @@ fun main() = application {
                         }
                         label = "Restitution"
                         value = restitution
-                        range = Range(0.0, mAXIMUM_RESTITUTION)
+                        range = Range(0.0, MAXIMUM_RESTITUTION)
                         events.valueChanged.listen { restitution = it.newValue }
                     }
                     slider {
@@ -148,7 +148,7 @@ fun main() = application {
                         }
                         label = "Cushion Elasticity"
                         value = cushionElasticity
-                        range = Range(0.0, mAXIMUM_CUSHION_ELASTICITY)
+                        range = Range(0.0, MAXIMUM_CUSHION_ELASTICITY)
                         events.valueChanged.listen { cushionElasticity = it.newValue }
                     }
                     slider {
@@ -157,7 +157,7 @@ fun main() = application {
                         }
                         label = "Rolling Resistance"
                         value = rollingResistance
-                        range = Range(mINIMUM_RESISTANCE, mAXIMUM_RESISTANCE)
+                        range = Range(MINIMUM_RESISTANCE, MAXIMUM_RESISTANCE)
                         events.valueChanged.listen { rollingResistance = it.newValue }
                     }
                 }//div
@@ -165,7 +165,7 @@ fun main() = application {
                     slider {
                         label = "Force"
                         value = cueForce
-                        range = Range(0.0, mAXIMUM_FORCE)
+                        range = Range(0.0, MAXIMUM_FORCE)
                         events.valueChanged.listen { cueForce = it.newValue }
                     }
                 }//div
@@ -191,7 +191,7 @@ fun main() = application {
                 } else {
                     val percentage: Percentage = xyFromAngle(cueAngle)
                     startingVelocity = Velocity(cueForce * percentage.x, cueForce * percentage.y)
-                    drawCueLine(balls, tableUpperLeft, cueForce / mAXIMUM_FORCE, percentage, TABLE_SIZE.x)
+                    drawCueLine(balls, tableUpperLeft, cueForce / MAXIMUM_FORCE, percentage, TABLE_SIZE.x)
                 }
             }
         }

@@ -5,6 +5,6 @@ data class Position(val x:Double,val y:Double){
     }
 
     override fun toString(): String {
-        return "Position("+x.toString() + "," + y.toString()+")"
+        return "Position($x,$y)"
     }
 }

@@ -3,7 +3,7 @@ import org.gradle.internal.os.OperatingSystem
 import org.gradle.nativeplatform.platform.internal.DefaultNativePlatform
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
-val applicationMainClass = "pool1Kt"
+val applicationMainClass = "Pool3_Kt"
 
 /**  ## additional ORX features to be added to this project */
 val orxFeatures = setOf<String>(
@@ -88,7 +88,9 @@ plugins {
     alias(libs.plugins.shadow)
     alias(libs.plugins.runtime)
     alias(libs.plugins.gitarchive.tomarkdown).apply(false)
-}
+  }
+
+
 
 repositories {
     mavenCentral()
@@ -183,6 +185,7 @@ tasks.register<Zip>("jpackageZip") {
     }
 }
 tasks.findByName("jpackageZip")?.dependsOn("jpackage")
+
 
 // ------------------------------------------------------------------------------------------------------------------ //
 

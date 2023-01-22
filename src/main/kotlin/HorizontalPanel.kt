@@ -101,6 +101,7 @@ private fun Div.slider3(rollingResistance: Double) {
         label = "Something Else "
         value = rollingResistance
         range = Range(1.0, 2.0)
+
     }
 }
 
@@ -122,7 +123,7 @@ private fun Div.slider2(rollingResistance: Double) {
 }
 
 private fun Div.slider1(rollingResistance: Double) : Double {
-    val thisValue = rollingResistance
+    var thisValue = rollingResistance
     slider {
         style = styleSheet {
             // Use Color.RGBa() to convert a ColorRGBa
@@ -136,6 +137,8 @@ private fun Div.slider1(rollingResistance: Double) : Double {
         value = thisValue
         label = "Something Else "
          range = Range(1.0, 2.0)
+
+        events.valueChanged.listen { thisValue = it.newValue }
     }
     return thisValue
 }
