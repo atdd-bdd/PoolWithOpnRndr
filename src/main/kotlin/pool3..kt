@@ -8,6 +8,7 @@ import org.openrndr.panel.ControlManager
 import org.openrndr.panel.elements.*
 import org.openrndr.panel.layout
 import org.openrndr.panel.style.*
+
 import org.openrndr.panel.styleSheet
 
 const val BALL_RADIUS = 10.00
@@ -25,22 +26,26 @@ fun main() = application {
 
     var cueAngle = 0.0
     var cueForce = 0.0
-
     var startingVelocity = Velocity(0.0, 0.0)
 
     var rollingResistance = 0.01
     var restitution = 0.95
     var cushionElasticity = 0.70
 
+    var displayIncrement = 100
+
     var balls: Array<Ball> = initialBalls()
     var previousBalls: List<Ball> = balls.map { it.copy() }
 
     val colors = colorOfBalls()
     val stripes = stripOnBalls()
-    val tableUpperLeft = Vector2(50.0, 200.0)
+
+    val tableUpperLeft = Vector2(250.0, 210.0)
+
     var computationSegments = 100
+
     configure {
-        width = 1000
+        width = 1200
         height = 700
         title = "Pool"
     }
@@ -97,6 +102,15 @@ fun main() = application {
                     background = Color.RGBa(ColorRGBa.DARK_BLUE)
                     height = 40.px
                 }
+                styleSheet(has class_ "side-bar") {
+                    this.height = 100.percent
+                    this.width = 200.px
+                    this.display = Display.FLEX
+                    this.flexDirection = FlexDirection.Column
+                    this.paddingLeft = 10.px
+                    this.paddingRight = 10.px
+                    this.background = Color.RGBa(ColorRGBa.LIGHT_GREEN)
+                }
                 div("horizontal") {
                     button {
                          label = "Cue Stroke"
@@ -121,6 +135,39 @@ fun main() = application {
                             stopAll(balls)
                         }
                     }
+                    button {
+                        label = "Rack 'em"
+                        clicked {
+                            rackBalls(balls)
+                        }
+                    }
+                    slider {
+                        style = styleSheet {
+                            width = 100.px
+                        }
+                        label = "Display Speed"
+                        value = displayIncrement.toDouble()
+                        range = Range(1.0, computationSegments.toDouble())
+                        events.valueChanged.listen { displayIncrement = (it.newValue + .01).toInt() }
+                    }
+                }//div
+                div("horizontal") {
+                    slider {
+                        label = "Force"
+                        value = cueForce
+                        range = Range(0.0, MAXIMUM_FORCE)
+                        events.valueChanged.listen { cueForce = it.newValue }
+                    }
+                }//div
+                div("horizontal") {
+                    slider {
+                        label = "Angle"
+                        value = cueAngle
+                        range = Range(0.0, 360.0)
+                        events.valueChanged.listen { cueAngle = it.newValue }
+                    }
+                }//div
+                div("side-bar") {
                     button {
                         label = "Load"
                         clicked {
@@ -160,30 +207,14 @@ fun main() = application {
                         range = Range(MINIMUM_RESISTANCE, MAXIMUM_RESISTANCE)
                         events.valueChanged.listen { rollingResistance = it.newValue }
                     }
-                }//div
-                div("horizontal") {
-                    slider {
-                        label = "Force"
-                        value = cueForce
-                        range = Range(0.0, MAXIMUM_FORCE)
-                        events.valueChanged.listen { cueForce = it.newValue }
-                    }
-                }//div
-                div("horizontal") {
-                    slider {
-                        label = "Angle"
-                        value = cueAngle
-                        range = Range(0.0, 360.0)
-                        events.valueChanged.listen { cueAngle = it.newValue }
-                    }
-                }//div
+                }
             }
 
             extend {
                 drawTable(tableUpperLeft, TABLE_SIZE)
                 drawBalls(balls, colors, stripes  ,tableUpperLeft)
                 if (moving) {
-                    moveBalls(balls, TABLE_SIZE, cushionElasticity, restitution, rollingResistance, computationSegments)
+                    moveBalls(balls, TABLE_SIZE, cushionElasticity, restitution, rollingResistance, computationSegments, displayIncrement)
                     if (stoppedMoving(balls)) {
                         moving = false
                         stopAll(balls)
@@ -197,6 +228,8 @@ fun main() = application {
         }
     }
 }
+
+
 
 private fun mouseToPosition(it: MouseEvent, tableUpperLeft: Vector2) =
     Position(it.position.x - tableUpperLeft.x, it.position.y - tableUpperLeft.y)
@@ -297,7 +330,6 @@ fun hitCue(balls: Array<Ball>, startingVelocity: Velocity) {
 }
 
 private fun Program.drawTable(tableUpperLeft: Vector2, tableSize: Vector2) {
-    val pockets = Pockets()
     drawer.fill = ColorRGBa.LIGHT_BLUE
     drawer.stroke = ColorRGBa.GREEN_YELLOW
     drawer.strokeWeight = 2.0
@@ -313,6 +345,29 @@ private fun Program.drawTable(tableUpperLeft: Vector2, tableSize: Vector2) {
     drawer.stroke = ColorRGBa.PINK
     drawer.strokeWeight = 4.0
 
+    drawPockets(tableUpperLeft)
+
+
+}
+
+private fun Program.drawCushion(tableUpperLeft: Vector2) {
+    val WIDTH_CUSHION = 25.0
+    val HALF_WIDTH_CUSHION = WIDTH_CUSHION / 2.0
+    drawer.fill = ColorRGBa.LIGHT_GREEN
+    drawer.strokeWeight =WIDTH_CUSHION
+    drawer.stroke = ColorRGBa.LIGHT_GREEN
+    drawer.lineSegment(tableUpperLeft.x - WIDTH_CUSHION, tableUpperLeft.y -HALF_WIDTH_CUSHION,
+        tableUpperLeft.x + TABLE_SIZE.x + WIDTH_CUSHION, tableUpperLeft.y - HALF_WIDTH_CUSHION )
+    drawer.lineSegment(tableUpperLeft.x - WIDTH_CUSHION, tableUpperLeft.y + TABLE_SIZE.y + HALF_WIDTH_CUSHION,
+        tableUpperLeft.x + TABLE_SIZE.x + WIDTH_CUSHION, tableUpperLeft.y + TABLE_SIZE.y + HALF_WIDTH_CUSHION )
+    drawer.lineSegment(tableUpperLeft.x - HALF_WIDTH_CUSHION, tableUpperLeft.y -WIDTH_CUSHION,
+        tableUpperLeft.x + - HALF_WIDTH_CUSHION, tableUpperLeft.y + TABLE_SIZE.y + WIDTH_CUSHION)
+    drawer.lineSegment(tableUpperLeft.x + TABLE_SIZE.x + HALF_WIDTH_CUSHION, tableUpperLeft.y -WIDTH_CUSHION,
+        tableUpperLeft.x + TABLE_SIZE.x + HALF_WIDTH_CUSHION, tableUpperLeft.y + TABLE_SIZE.y + WIDTH_CUSHION )
+}
+
+private fun Program.drawPockets(tableUpperLeft: Vector2) {
+    val pockets = Pockets()
     drawPocketLine(pockets.topSidePocket, tableUpperLeft)
     drawPocketLine(pockets.bottomSidePocket, tableUpperLeft)
     drawPocketLine(pockets.bottomLeftPocketBottom, tableUpperLeft)
@@ -323,6 +378,7 @@ private fun Program.drawTable(tableUpperLeft: Vector2, tableSize: Vector2) {
     drawPocketLine(pockets.topLeftPocketTop, tableUpperLeft)
     drawPocketLine(pockets.topRightPocketTop, tableUpperLeft)
     drawPocketLine(pockets.topRightPocketRight, tableUpperLeft)
+    drawCushion(tableUpperLeft)
 
 }
 

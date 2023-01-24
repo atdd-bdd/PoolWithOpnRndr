@@ -1,38 +1,28 @@
 
-Add a check for energy and momentum - report if increased over initial energy when cue is struck
+Thoughts:
 
-Check for position+velocity/loop post collision to see if still in collision.  If so, then move balls out of collision range by
-incrementing both by that amount -  may do this in loop upto 10 times to make sure they aren't sill in collision
-Print out if collision returns
+1. Ball is a DTO without behavior.  Separtion between display and physics model
+    What do you think?
+2. Panel - IntellJ wants to refactor it.
+3. The ugly dropball method
+
+Rearrange the UI so that less needed things are on the left.
+Top row should have Cue Stroke,
+
+Add a slider to set the move increment (1 to 100)
+
+Add a "Rack" button
+
+    Add the load and store functionality
+    Will the file include both balls and the table constants?
+
+Add communication with sockets -
+    Send the cue stroke over - set table constants from that
+
+Show the entire cushion with diamond markings. Then in checkForPockets,
+will need to move the balls off the table.   The pockets will be bigger
+
+Double check for turning inactive if beyond the cushion area.
 
 
-Switch to GUI for OpenRndr -  that doesn't work !!!
 
-Add sliders for elasticity, restitution - not enough room
-
-Make variables out of all constants ,   force, etc.
-
-Change force to a color change
-
-Use table size to compute the other display values
-
-
-
-Add a "tweaker" for the angle
-
-Add button to do a "replay"
-
-Add button to do a pause (should have a  hit and a pause button)
-
-Add "games" with different number of balls and different values
-
-Add dropdown list to select a game - standard, other
-
-Add the pockets - show the circles.  A line segment over each.
-    CheckForPocket - if position of ball croses the line segment, then
-        set inactive.
-    For each ball loop, continue if inactive
-
-When "stopped", set all velocities to zero
-
-s

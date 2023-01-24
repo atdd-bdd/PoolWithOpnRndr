@@ -7,9 +7,10 @@ fun moveBalls(
     cushionElasticity: Double,
     restitution: Double,
     rollingResistance: Double,
-    segments: Int
+    segments: Int,
+    displayIncrement : Int
 ) {
-    for (loop in 0 until segments) {
+    for (loop in 0 until displayIncrement) {
         // Compute the new position of the pool ball
         for (index in balls.indices) {
             if (!balls[index].active) continue
@@ -257,4 +258,43 @@ fun checkForDropLocation(whichBall:Int, startPosition: Position, endMousePositio
         }
     }
     return endPosition
+}
+
+
+fun rackBalls(balls: Array<Ball>) {
+    val headBallPosition = Position(3 * TABLE_SIZE.x / 4, TABLE_SIZE.y / 2)
+    val diameter = BALL_RADIUS*2
+    val rowDistance = Math.sqrt(diameter*diameter - BALL_RADIUS*BALL_RADIUS)
+    val cueBallPosition = (Position(TABLE_SIZE.x / 4, TABLE_SIZE.y / 2))
+    val positions = arrayOf<Position>(
+        Position(0.0, 0.0),
+
+        Position(rowDistance, BALL_RADIUS),
+        Position(rowDistance, -BALL_RADIUS),
+
+        Position(rowDistance * 2, diameter),
+        Position(rowDistance * 2, 0.0),
+        Position(rowDistance * 2, -diameter),
+
+        Position(rowDistance * 3, BALL_RADIUS + diameter),
+        Position(rowDistance * 3, BALL_RADIUS),
+        Position(rowDistance * 3, -BALL_RADIUS),
+        Position(rowDistance * 3, -(BALL_RADIUS + diameter)),
+
+        Position(rowDistance * 4, diameter * 2),
+        Position(rowDistance * 4, diameter),
+        Position(rowDistance * 4, 0.0),
+        Position(rowDistance * 4, -diameter),
+        Position(rowDistance * 4, -diameter * 2),
+    )
+    balls[0].position = cueBallPosition
+    balls[0].active = true
+    balls[0].velocity = Velocity(0.0, 0.0)
+    for (index in positions.indices)
+    {
+        balls[index + 1].position = Position(positions[index].x + headBallPosition.x,
+            positions[index].y + headBallPosition.y)
+        balls[index + 1].active = true
+        balls[index+1].velocity = Velocity(0.0, 0.0)
+    }
 }
