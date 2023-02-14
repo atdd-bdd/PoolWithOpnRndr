@@ -2,6 +2,10 @@ import org.openrndr.MouseEvent
 import org.openrndr.Program
 import org.openrndr.application
 import org.openrndr.color.ColorRGBa
+import org.openrndr.dialogs.getDefaultPathForContext
+import org.openrndr.dialogs.openFileDialog
+import org.openrndr.dialogs.saveFileDialog
+import org.openrndr.dialogs.setDefaultPathForContext
 import org.openrndr.extra.color.presets.*
 import org.openrndr.math.Vector2
 import org.openrndr.panel.ControlManager
@@ -10,12 +14,15 @@ import org.openrndr.panel.layout
 import org.openrndr.panel.style.*
 
 import org.openrndr.panel.styleSheet
+import java.io.File
 
 const val BALL_RADIUS = 10.00
 const val BALL_DIAMETER_SQUARED = (BALL_RADIUS * 2) * (BALL_RADIUS * 2)
 val TABLE_SIZE = Vector2(900.0, 450.0)
 
 private const val MOUSE_NOT_ON_BALL = -1
+
+var balls: Array<Ball> = initialBalls()
 
 fun main() = application {
     val MINIMUM_RESISTANCE = 0.0
@@ -33,8 +40,6 @@ fun main() = application {
     var cushionElasticity = 0.70
 
     var displayIncrement = 100
-
-    var balls: Array<Ball> = initialBalls()
     var previousBalls: List<Ball> = balls.map { it.copy() }
 
     val colors = colorOfBalls()
@@ -50,6 +55,7 @@ fun main() = application {
         title = "Pool"
     }
     program {
+        var previousTime = program.seconds
         var moving = false
         var ballMoving = MOUSE_NOT_ON_BALL
         var startPosition = Position(0.0, 0.0)
@@ -169,17 +175,53 @@ fun main() = application {
                 }//div
                 div("side-bar") {
                     button {
-                        label = "Load"
+                        label = "Load Game"
                         clicked {
+                            openFileDialog(supportedExtensions = listOf("pool"), contextID = "pool"){loadGame(it)}
                             print("Load file")
                         }
                     }
                     button {
-                        label = "Store"
+                        label = "Load Config"
                         clicked {
-                            print("Store file")
+                            openFileDialog(supportedExtensions = listOf("poolc"), contextID = "pool") {
+                                print(it)
+                            }
+                            print("Load file")
                         }
                     }
+
+                    button {
+                        label = "Save"
+                        clicked {
+                            val defaultPath = getDefaultPathForContext(contextID = "pool")
+                            var defaultSaveFolder = "pool"
+                            if (defaultPath == null) {
+                                val local = File(".")
+                                val parameters = File(local, defaultSaveFolder)
+                                if (parameters.exists() && parameters.isDirectory) {
+                                    setDefaultPathForContext(contextID = "pool", file = parameters)
+                                } else {
+                                    if (parameters.mkdirs()) {
+                                        setDefaultPathForContext(
+                                            contextID = "pool",
+                                            file = parameters
+                                        )
+                                    } else {
+                                        print ("Could not create directory ${parameters.absolutePath}" )
+                                    }
+                                }
+                            }
+
+                            saveFileDialog(
+                                suggestedFilename = "game1.pool",
+                                contextID = "pool",
+                                supportedExtensions = listOf("pool")){
+                                    saveGame(it)
+                            }
+                        }
+                    }
+
                     slider {
                         style = styleSheet {
                             width = 100.px
@@ -211,6 +253,11 @@ fun main() = application {
             }
 
             extend {
+                val deltaTime = this.seconds - previousTime
+                val timesPerSecond = 1.0 / deltaTime
+               // print("Delta Time is $deltaTime per second $timesPerSecond \n" )
+                previousTime =this.seconds
+
                 drawTable(tableUpperLeft, TABLE_SIZE)
                 drawBalls(balls, colors, stripes  ,tableUpperLeft)
                 if (moving) {
@@ -229,6 +276,65 @@ fun main() = application {
     }
 }
 
+fun Program.loadGame(it: File){
+    print("Loading game from $it")
+    val text =  it.readText()
+     balls= readGameString(text, balls)
+    return
+}
+
+fun readGameString(text: String, balls: Array<Ball>): Array<Ball> {
+    var ballsOut = balls
+    val lines = text.split("\n")
+    var firstLine = true
+    var index = 0
+    for (line in lines) {
+        if (firstLine) {
+            print(line)
+            firstLine = false
+            continue;
+        }
+        print(line + "\n")
+        val fields = line.split(',')
+        print(fields + "\n")
+        try {
+            val ball = Ball(
+                fields[0].toInt(), Position(
+                    fields[1].toDouble(),
+                    fields[2].toDouble()
+                ), Velocity(fields[3].toDouble(), fields[4].toDouble()),
+                fields[5].toBoolean())
+            ballsOut[index] = ball
+                        index++;
+
+        }
+        catch(e: NumberFormatException){
+            print("Number format exception")
+            }
+        val size = ballsOut.size
+        if (index >= size)
+            break;
+    }
+    return ballsOut
+}
+
+fun Program.saveGame(it: File) {
+    print("Storing game into $it")
+    val text = getGameString(balls)
+    it.writeText(text)
+}
+
+fun getGameString(balls: Array<Ball>): String {
+    var result = StringBuilder()
+    result.append("Symbol,PositionX,PositionY,VelocityX,VelocityY,Active\n")
+    for (i in balls.indices){
+        val ball =  balls[i]
+        val line = String.format("${ball.symbol},${ball.position.x},${ball.position.y}," +
+                "${ball.velocity.x},${ball.velocity.y},${ball.active}\n")
+        result.append(line)
+    }
+    return result.toString()
+}
 
 
 private fun mouseToPosition(it: MouseEvent, tableUpperLeft: Vector2) =
@@ -368,16 +474,16 @@ private fun Program.drawCushion(tableUpperLeft: Vector2) {
 
 private fun Program.drawPockets(tableUpperLeft: Vector2) {
     val pockets = Pockets()
-    drawPocketLine(pockets.topSidePocket, tableUpperLeft)
-    drawPocketLine(pockets.bottomSidePocket, tableUpperLeft)
-    drawPocketLine(pockets.bottomLeftPocketBottom, tableUpperLeft)
-    drawPocketLine(pockets.bottomLeftPocketLeft, tableUpperLeft)
-    drawPocketLine(pockets.bottomRightPocketRight, tableUpperLeft)
-    drawPocketLine(pockets.bottomRightPocketBottom, tableUpperLeft)
-    drawPocketLine(pockets.topLeftPocketLeft, tableUpperLeft)
-    drawPocketLine(pockets.topLeftPocketTop, tableUpperLeft)
-    drawPocketLine(pockets.topRightPocketTop, tableUpperLeft)
-    drawPocketLine(pockets.topRightPocketRight, tableUpperLeft)
+    drawPocketLine(pockets.leftSidePocket, tableUpperLeft)
+    drawPocketLine(pockets.rightSidePocket, tableUpperLeft)
+    drawPocketLine(pockets.footLeftCornetPocketFootLine, tableUpperLeft)
+    drawPocketLine(pockets.footLeftConerPocketSideLine, tableUpperLeft)
+    drawPocketLine(pockets.headLeftCornerPocketHeadLine, tableUpperLeft)
+    drawPocketLine(pockets.headLeftCornerPocketSideLine, tableUpperLeft)
+    drawPocketLine(pockets.headRightCornerPocketSideLine, tableUpperLeft)
+    drawPocketLine(pockets.headRightCornerPocketHeadLine, tableUpperLeft)
+    drawPocketLine(pockets.footRightCornerPocketFootLine, tableUpperLeft)
+    drawPocketLine(pockets.footRightCornerPocketSideLine, tableUpperLeft)
     drawCushion(tableUpperLeft)
 
 }

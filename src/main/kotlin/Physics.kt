@@ -173,11 +173,11 @@ fun checkCushion(
 
 private fun checkForNotPocketX(position: Position, pockets: Pockets, tableSize:Vector2): Boolean {
     var notInPocket = true
-    if (position.x > pockets.topSidePocket.start.x && position.x < pockets.topSidePocket.end.x)
+    if (position.x > pockets.leftSidePocket.start.x && position.x < pockets.leftSidePocket.end.x)
         notInPocket = false
-    if (position.x > pockets.topRightPocketTop.start.x)
+    if (position.x > pockets.rightSidePocket.start.x)
         notInPocket = false
-    if (position.x < pockets.topLeftPocketLeft.end.x)
+    if (position.x < pockets.headRightCornerPocketSideLine.end.x)
         notInPocket = false
     if (position.y < 0.0 || position.y > tableSize.y)
         notInPocket = false
@@ -187,9 +187,9 @@ private fun checkForNotPocketX(position: Position, pockets: Pockets, tableSize:V
 private fun checkForNotPocketY(position: Position, pockets: Pockets, tableSize:Vector2): Boolean {
     var notInPocket = true
 
-    if (position.y < pockets.topLeftPocketTop.end.y)
+    if (position.y < pockets.headRightCornerPocketHeadLine.end.y)
         notInPocket = false
-    if (position.y > pockets.bottomLeftPocketLeft.start.y)
+    if (position.y > pockets.footLeftConerPocketSideLine.start.y)
         notInPocket = false
     if (position.x < 0.0 || position.x > tableSize.x)
         notInPocket = false
