@@ -1,13 +1,21 @@
-# OPENRNDR template project
+# Pool using OPENRNDR
 
-A feature rich template for creating OPENRNDR programs based on Gradle/Kts
+This project started with the OpenRndr template ](https://guide.openrndr.org/setUpYourFirstProgram.html)  [OPENRNDR guide](https://guide.openrndr.org)
 
-The template consists of a configuration for Gradle and an example OPENRNDR program. The Gradle configuration should serve as the
-go-to starting point for writing OPENRNDR-based software.
+pool3.kt contains main.    
+  This file contains the display methods
+physics.kt 
+  Contains all the methods for 
 
-If you are looking at this from IntelliJ IDEA you can start by expanding the _project_ tab on the left. You will find a template program in `src/main/kotlin/TemplateProgram.kt`
+The Gradle task to create a single jar of the program with all libraries is shadowDistZip 
 
-You will find some [basic instructions](https://guide.openrndr.org/setUpYourFirstProgram.html) in the [OPENRNDR guide](https://guide.openrndr.org)
+
+
+
+
+
+Here is additional information that was in the openrndr template. I have not tried these taks - just the Intellij run commands and creating a single jar.  
+
 
 ## Gradle tasks
  - `run` runs the TemplateProgram
