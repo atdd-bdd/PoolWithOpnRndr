@@ -29,7 +29,7 @@ fun main() = application {
     val MAXIMUM_RESISTANCE = 0.05
     val MAXIMUM_CUSHION_ELASTICITY = 1.0
     val MAXIMUM_RESTITUTION = 1.0
-    val MAXIMUM_FORCE = 100.0
+    val MAXIMUM_FORCE = 5000.0
 
     var cueAngle = 0.0
     var cueForce = 0.0
@@ -59,7 +59,7 @@ fun main() = application {
         var moving = false
         var ballMoving = MOUSE_NOT_ON_BALL
         var startPosition = Position(0.0, 0.0)
-
+        val pockets = Pockets()
         mouse.buttonDown.listen {
             //print( it.position.toString() + "\n")
             val currentPosition = mouseToPosition(it, tableUpperLeft)
@@ -123,7 +123,7 @@ fun main() = application {
                         clicked {
                             moving = true
                             val segmentsPossibly = totalVelocity(startingVelocity) / 0.1
-                            print("Possible segments $segmentsPossibly\n")
+                            print("*************************Possible segments $segmentsPossibly\n")
                             computationSegments = 100
                             previousBalls = balls.map { it.copy() }
                             hitCue(balls, startingVelocity)
@@ -195,7 +195,7 @@ fun main() = application {
                         label = "Save"
                         clicked {
                             val defaultPath = getDefaultPathForContext(contextID = "pool")
-                            var defaultSaveFolder = "pool"
+                            val defaultSaveFolder = "pool"
                             if (defaultPath == null) {
                                 val local = File(".")
                                 val parameters = File(local, defaultSaveFolder)
@@ -254,14 +254,24 @@ fun main() = application {
 
             extend {
                 val deltaTime = this.seconds - previousTime
-                val timesPerSecond = 1.0 / deltaTime
+               // val timesPerSecond = 1.0 / deltaTime
                // print("Delta Time is $deltaTime per second $timesPerSecond \n" )
                 previousTime =this.seconds
 
-                drawTable(tableUpperLeft, TABLE_SIZE)
+                drawTable(tableUpperLeft, TABLE_SIZE, pockets)
                 drawBalls(balls, colors, stripes  ,tableUpperLeft)
                 if (moving) {
-                    moveBalls(balls, TABLE_SIZE, cushionElasticity, restitution, rollingResistance, computationSegments, displayIncrement)
+                    moveBalls(
+                        balls,
+                        TABLE_SIZE,
+                        cushionElasticity,
+                        restitution,
+                        rollingResistance,
+                        computationSegments,
+                        displayIncrement,
+                        deltaTime,
+                        pockets
+                    )
                     if (stoppedMoving(balls)) {
                         moving = false
                         stopAll(balls)
@@ -284,7 +294,7 @@ fun Program.loadGame(it: File){
 }
 
 fun readGameString(text: String, balls: Array<Ball>): Array<Ball> {
-    var ballsOut = balls
+    val ballsOut = balls
     val lines = text.split("\n")
     var firstLine = true
     var index = 0
@@ -292,7 +302,7 @@ fun readGameString(text: String, balls: Array<Ball>): Array<Ball> {
         if (firstLine) {
             print(line)
             firstLine = false
-            continue;
+            continue
         }
         print(line + "\n")
         val fields = line.split(',')
@@ -305,7 +315,7 @@ fun readGameString(text: String, balls: Array<Ball>): Array<Ball> {
                 ), Velocity(fields[3].toDouble(), fields[4].toDouble()),
                 fields[5].toBoolean())
             ballsOut[index] = ball
-                        index++;
+                        index++
 
         }
         catch(e: NumberFormatException){
@@ -313,7 +323,7 @@ fun readGameString(text: String, balls: Array<Ball>): Array<Ball> {
             }
         val size = ballsOut.size
         if (index >= size)
-            break;
+            break
     }
     return ballsOut
 }
@@ -325,7 +335,7 @@ fun Program.saveGame(it: File) {
 }
 
 fun getGameString(balls: Array<Ball>): String {
-    var result = StringBuilder()
+    val result = StringBuilder()
     result.append("Symbol,PositionX,PositionY,VelocityX,VelocityY,Active\n")
     for (i in balls.indices){
         val ball =  balls[i]
@@ -381,7 +391,7 @@ private fun colorOfBalls() = arrayOf(
     ColorRGBa.YELLOW,
     ColorRGBa.BLUE,
     ColorRGBa.RED,
-    ColorRGBa.PURPLE,
+    ColorRGBa.MAGENTA,
     ColorRGBa.ORANGE,
     ColorRGBa.GREEN,
     ColorRGBa.DARK_MAGENTA,
@@ -391,7 +401,7 @@ private fun colorOfBalls() = arrayOf(
     ColorRGBa.YELLOW,
     ColorRGBa.BLUE,
     ColorRGBa.RED,
-    ColorRGBa.PURPLE,
+    ColorRGBa.MAGENTA,
     ColorRGBa.ORANGE,
     ColorRGBa.GREEN,
     ColorRGBa.DARK_MAGENTA,)
@@ -435,7 +445,7 @@ fun hitCue(balls: Array<Ball>, startingVelocity: Velocity) {
     balls[0].velocity = startingVelocity
 }
 
-private fun Program.drawTable(tableUpperLeft: Vector2, tableSize: Vector2) {
+private fun Program.drawTable(tableUpperLeft: Vector2, tableSize: Vector2, pockets: Pockets) {
     drawer.fill = ColorRGBa.LIGHT_BLUE
     drawer.stroke = ColorRGBa.GREEN_YELLOW
     drawer.strokeWeight = 2.0
@@ -451,7 +461,7 @@ private fun Program.drawTable(tableUpperLeft: Vector2, tableSize: Vector2) {
     drawer.stroke = ColorRGBa.PINK
     drawer.strokeWeight = 4.0
 
-    drawPockets(tableUpperLeft)
+    drawPockets(tableUpperLeft, pockets)
 
 
 }
@@ -472,19 +482,37 @@ private fun Program.drawCushion(tableUpperLeft: Vector2) {
         tableUpperLeft.x + TABLE_SIZE.x + HALF_WIDTH_CUSHION, tableUpperLeft.y + TABLE_SIZE.y + WIDTH_CUSHION )
 }
 
-private fun Program.drawPockets(tableUpperLeft: Vector2) {
-    val pockets = Pockets()
-    drawPocketLine(pockets.leftSidePocket, tableUpperLeft)
-    drawPocketLine(pockets.rightSidePocket, tableUpperLeft)
-    drawPocketLine(pockets.footLeftCornetPocketFootLine, tableUpperLeft)
-    drawPocketLine(pockets.footLeftConerPocketSideLine, tableUpperLeft)
+private fun Program.drawPockets(tableUpperLeft: Vector2, pockets: Pockets) {
+
+    drawCushion(tableUpperLeft)
+    drawer.stroke = ColorRGBa.GREEN_YELLOW
+    drawer.strokeWeight = 2.0
+    for (i in pockets.lines.indices){
+        drawPocketLine(pockets.lines[i], tableUpperLeft)
+    }
+    drawer.stroke = ColorRGBa.LIGHT_BLUE
+    drawer.strokeWeight = 1.0
+    drawer.fill = ColorRGBa.LIGHT_BLUE
+    for (i in pockets.circles.indices){
+        drawPocketCircle(pockets.circles[i], tableUpperLeft)
+    }
+  /*   drawPocketLine(pockets.leftSidePocketLine, tableUpperLeft)
+    drawPocketLine(pockets.rightSidePocketLine, tableUpperLeft)
+    drawPocketLine(pockets.footLeftCornerPocketFootLine, tableUpperLeft)
+    drawPocketLine(pockets.footLeftCornerPocketSideLine, tableUpperLeft)
     drawPocketLine(pockets.headLeftCornerPocketHeadLine, tableUpperLeft)
     drawPocketLine(pockets.headLeftCornerPocketSideLine, tableUpperLeft)
     drawPocketLine(pockets.headRightCornerPocketSideLine, tableUpperLeft)
     drawPocketLine(pockets.headRightCornerPocketHeadLine, tableUpperLeft)
     drawPocketLine(pockets.footRightCornerPocketFootLine, tableUpperLeft)
     drawPocketLine(pockets.footRightCornerPocketSideLine, tableUpperLeft)
-    drawCushion(tableUpperLeft)
+
+   */
+}
+
+fun Program.drawPocketCircle(circle: Circle, tableUpperLeft: Vector2) {
+    drawer.fill = ColorRGBa.DARK_GREEN
+   drawer.circle(tableUpperLeft.x + circle.x, tableUpperLeft.y + circle.y, circle.radius)
 
 }
 

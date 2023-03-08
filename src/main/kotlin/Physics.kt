@@ -8,32 +8,45 @@ fun moveBalls(
     restitution: Double,
     rollingResistance: Double,
     segments: Int,
-    displayIncrement : Int
+    displayIncrement: Int,
+    deltaTime: Double,
+    pockets: Pockets
 ) {
+    print (" DeltaTime " +  deltaTime.toString() )
+    print (" Segments " + segments.toString() +
+            " displayIncremenat "  + displayIncrement.toString())
+    print ("Velocity " + balls[0].velocity.x + " " + balls[0].velocity.y)
+        print("\n")
+
     for (loop in 0 until displayIncrement) {
         // Compute the new position of the pool ball
         for (index in balls.indices) {
-            if (!balls[index].active) continue
-            balls[index].velocity =
-                checkCushion(balls[index].position, balls[index].velocity, tableSize, cushionElasticity)
+            val ball = balls[index]
+            if (!ball.active) continue
+            ball.velocity =
+                checkCushion(balls[index].position, ball.velocity, tableSize, cushionElasticity, pockets)
         }
         computeCollisions(balls, restitution)
         for (index in balls.indices) {
-            if (!balls[index].active) continue
-            balls[index].velocity = rollResistance(balls[index].velocity, rollingResistance, segments)
-            balls[index].position = updatePosition(balls[index].position, balls[index].velocity, segments)
-            checkInPocket(balls[index])
+            val ball = balls[index]
+            if (!ball.active) continue
+            ball.velocity = rollResistance(ball.velocity, rollingResistance, segments,deltaTime)
+            ball.position = updatePosition(ball.position, ball.velocity, segments, deltaTime)
+            checkInPocket(ball)
         }
     }
 }
 
 fun computeCollisions(balls: Array<Ball>, restitution: Double) {
+    val collided = BooleanArray(16) { false }
     for (first in balls.indices) {
         val firstBall = balls[first]
         if (!firstBall.active) continue
+        if (collided[first]) continue
         for (second in first + 1 until balls.size) {
             val secondBall = balls[second]
             if (!secondBall.active) continue
+            if (collided[second]) continue
             if (colliding(firstBall.position, secondBall.position)) {
                 val velocities: TwoVelocities = computeCollisionVelocity(
                     firstBall.position,
@@ -42,6 +55,8 @@ fun computeCollisions(balls: Array<Ball>, restitution: Double) {
                 )
                 firstBall.velocity = velocities.velocity1
                 secondBall.velocity = velocities.velocity2
+                collided[first] = true
+                collided[second] = true
             }
         }
     }
@@ -53,6 +68,8 @@ fun checkInPocket(ball: Ball) {
         ball.active = false
     if (ball.position.y < 0.0 - BALL_RADIUS || ball.position.y > TABLE_SIZE.y + BALL_RADIUS)
         ball.active = false
+    if (!ball.active)
+        ball.velocity = Velocity(0.0, 0.0)
 }
 
 
@@ -90,9 +107,10 @@ fun computeCollisionVelocity(
     val vx_cm = (m1 * vx1 + m2 * vx2) / (m1 + m2)
     val vy_cm = (m1 * vy1 + m2 * vy2) / (m1 + m2)
 
-
-    if ((vx21 * x21 + vy21 * y21) >= 0) {
-        print("*** not colliding \n")
+    val checkColliding = (vx21 * x21 + vy21 * y21)
+    if (checkColliding >= 0) {
+        if (checkColliding > 0)
+            print ("Not colliding " + checkColliding.toString())
         return TwoVelocities(velocity1, velocity2)
     }
 //     *** I have inserted the following statements to avoid a zero divide;
@@ -132,26 +150,29 @@ private fun getSign(x21: Double): Double {
 
 
 
-fun updatePosition(start: Position, speed: Velocity, segments: Int): Position {
-    return Position(start.x + speed.x / segments, start.y + speed.y / segments)
+fun updatePosition(start: Position, speed: Velocity, segments: Int, deltaTime: Double): Position {
+    return Position(start.x + speed.x * deltaTime / segments, start.y + speed.y * deltaTime / segments)
 }
 
-fun rollResistance(velocity: Velocity, rollingResistance: Double, segments: Int): Velocity {
+fun rollResistance(velocity: Velocity, rollingResistance: Double, segments: Int, deltaTime: Double): Velocity {
+    val SCALE = 30
     return Velocity(
-        velocity.x * (1.0 - rollingResistance / segments),
-        velocity.y * (1.0 - rollingResistance / segments)
+        velocity.x * (1.0 - rollingResistance*deltaTime * SCALE / segments),
+        velocity.y * (1.0 - rollingResistance*deltaTime * SCALE / segments)
     )
 }
 
 fun checkCushion(
     position: Position, velocity: Velocity, tableSize: Vector2,
-    cushionElasticity: Double
+    cushionElasticity: Double, pockets: Pockets
 ): Velocity {
-    val pockets = Pockets()
+    return pockets.checkCushion(position, velocity, tableSize, cushionElasticity)
+    /*
     var velocityX = velocity.x
     var velocityY = velocity.y
-    if (((position.x <= 0.0 + BALL_RADIUS) && velocityX < 0) ||
-        ((position.x >= tableSize.x - BALL_RADIUS) && velocityX > 0)
+    if (atHead(position, velocityX) ||
+        atFoot(position, tableSize, velocityX)
+        
     ) {
         if (checkForNotPocketY(position, pockets, tableSize)) {
             velocityX = -velocityX
@@ -159,25 +180,37 @@ fun checkCushion(
             velocityY *= cushionElasticity
         }
     }
-    if (((position.y <= 0.0 + BALL_RADIUS) && velocityY < 0) ||
-        ((position.y >= tableSize.y - BALL_RADIUS) && velocityY > 0)
+    if (atLeftSide(position, velocityY) ||
+        atRightSide(position, tableSize, velocityY)
     ) {
-        if (checkForNotPocketX(position, pockets, tableSize)) {
+        if (checkForNotApproachingSidePockets(position, pockets, tableSize)) {
             velocityY = -velocityY
             velocityX *= cushionElasticity
             velocityY *= cushionElasticity
         }
     }
     return Velocity(velocityX, velocityY)
+
+     */
 }
 
-private fun checkForNotPocketX(position: Position, pockets: Pockets, tableSize:Vector2): Boolean {
+private fun atRightSide(position: Position, tableSize: Vector2, velocityY: Double) =
+    ((position.y >= tableSize.y - BALL_RADIUS) && velocityY > 0)
+
+private fun atLeftSide(position: Position, velocityY: Double) = ((position.y <= 0.0 + BALL_RADIUS) && velocityY < 0)
+
+private fun atFoot(position: Position, tableSize: Vector2, velocityX: Double) =
+    ((position.x >= tableSize.x - BALL_RADIUS) && velocityX > 0)
+
+private fun atHead(position: Position, velocityX: Double) = ((position.x <= 0.0 + BALL_RADIUS) && velocityX < 0)
+
+private fun checkForNotApproachingSidePockets(position: Position, pockets: Pockets, tableSize:Vector2): Boolean {
     var notInPocket = true
-    if (position.x > pockets.leftSidePocket.start.x && position.x < pockets.leftSidePocket.end.x)
+    if (position.x > pockets.leftSidePocketLine.start.x + BALL_RADIUS && position.x < pockets.leftSidePocketLine.end.x - BALL_RADIUS )
         notInPocket = false
-    if (position.x > pockets.rightSidePocket.start.x)
+    if (position.x < pockets.headLeftCornerPocketSideLine.end.x- BALL_RADIUS)
         notInPocket = false
-    if (position.x < pockets.headRightCornerPocketSideLine.end.x)
+    if (position.x > pockets.footLeftCornerPocketSideLine.start.x + BALL_RADIUS )
         notInPocket = false
     if (position.y < 0.0 || position.y > tableSize.y)
         notInPocket = false
@@ -187,9 +220,9 @@ private fun checkForNotPocketX(position: Position, pockets: Pockets, tableSize:V
 private fun checkForNotPocketY(position: Position, pockets: Pockets, tableSize:Vector2): Boolean {
     var notInPocket = true
 
-    if (position.y < pockets.headRightCornerPocketHeadLine.end.y)
+    if (position.y < pockets.headLeftCornerPocketHeadLine.end.y-BALL_RADIUS)
         notInPocket = false
-    if (position.y > pockets.footLeftConerPocketSideLine.start.y)
+    if (position.y > pockets.headRightCornerPocketHeadLine.start.y+BALL_RADIUS)
         notInPocket = false
     if (position.x < 0.0 || position.x > tableSize.x)
         notInPocket = false
@@ -207,12 +240,13 @@ fun xyFromAngle(angle: Double): Percentage {
 
 fun stoppedMoving(balls: Array<Ball>): Boolean {
 
-    val STOPPED_SPEED = .1
+    val STOPPED_SPEED = .5
     var stopped = true
     var thisStopped: Boolean
     for (index in balls.indices) {
-        if (!balls[index].active) continue
-        thisStopped = (abs(balls[index].velocity.x) < STOPPED_SPEED) && (abs(balls[index].velocity.y) < STOPPED_SPEED)
+        val ball = balls[index]
+        if (!ball.active) continue
+        thisStopped = (abs(ball.velocity.x) < STOPPED_SPEED) && (abs(ball.velocity.y) < STOPPED_SPEED)
         if (!thisStopped) stopped = false
     }
     return stopped
@@ -221,7 +255,6 @@ fun stoppedMoving(balls: Array<Ball>): Boolean {
 fun stopAll(balls: Array<Ball>) {
     for (index in balls.indices) {
         balls[index].velocity = Velocity(0.0, 0.0)
-
     }
 
 }
