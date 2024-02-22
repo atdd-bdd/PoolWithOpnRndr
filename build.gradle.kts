@@ -251,6 +251,7 @@ class Openrndr {
             maven(url = "https://maven.openrndr.org")
         }
         dependencies {
+            implementation("org.slf4j:slf4j-log4j12:1.7.29")
             runtimeOnly(openrndr("gl3"))
             runtimeOnly(openrndrNatives("gl3"))
             implementation(openrndr("openal"))
