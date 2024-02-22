@@ -48,13 +48,15 @@ fun main() = application {
     val tableUpperLeft = Vector2(250.0, 210.0)
 
     var computationSegments = 100
-
+    var yourID =""
+    var opponentID =""
     configure {
         width = 1200
         height = 700
         title = "Pool"
     }
     program {
+
         var previousTime = program.seconds
         var moving = false
         var ballMoving = MOUSE_NOT_ON_BALL
@@ -249,6 +251,26 @@ fun main() = application {
                         range = Range(MINIMUM_RESISTANCE, MAXIMUM_RESISTANCE)
                         events.valueChanged.listen { rollingResistance = it.newValue }
                     }
+                    textfield() {
+                        style = styleSheet {
+                            width = 100.px
+                        }
+                        label = "Your ID"
+                        value = yourID
+                        events.valueChanged.listen { yourID = it.newValue
+                          }
+                    }
+                    textfield() {
+                        style = styleSheet {
+                            width = 100.px
+                        }
+                        label = "Opponent ID"
+                        value = opponentID
+                        width = 15
+                        events.valueChanged.listen {opponentID = it.newValue
+                        }
+                    }
+
                 }
             }
 
