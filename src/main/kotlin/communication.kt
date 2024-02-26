@@ -3,7 +3,7 @@ import io.ktor.client.plugins.websocket.*
 import io.ktor.http.*
 import io.ktor.websocket.*
 import kotlinx.coroutines.*
-import kotlin.io.readText
+
 
 var outputMessage = ""
 var inputMessage = ""

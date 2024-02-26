@@ -141,11 +141,13 @@ fun main() = application {
                 div("horizontal") {
 
                     button {
-                        label = yourTurnLabel(your_turn)
+                        label = "None"
                         clicked {
                             your_turn = !your_turn
+                            label = yourTurnLabel(your_turn)
                         }
                     }
+
                     button {
                         label = "Cue Stroke"
                         clicked {
@@ -531,23 +533,23 @@ private fun Program.drawTable(tableUpperLeft: Vector2, tableSize: Vector2, pocke
 
     drawPockets(tableUpperLeft, pockets)
 }
-fun Program.drawChat(){
-    drawer.fill = ColorRGBa.GRAY
-    drawer.stroke = ColorRGBa.GRAY
-    drawer.strokeWeight = 2.0
-    var box1 = Rectangle(300.0, 300.0, 1000.0, 1000.0)
-    drawer.rectangle(box1)
-    val font = loadFont("data/fonts/default.otf", 24.0)
-        drawer.fontMap = font
-        drawer.fill = ColorRGBa.PINK
-        writer {
-            box = Rectangle(300.0, 300.0, 1000.0, 1000.0)
-        newLine()
-        text("Here is a line of text..")
-        newLine()
-        text("Here is another line of text..")
-    }
-}
+//fun Program.drawChat(){
+//    drawer.fill = ColorRGBa.GRAY
+//    drawer.stroke = ColorRGBa.GRAY
+//    drawer.strokeWeight = 2.0
+//    var box1 = Rectangle(300.0, 300.0, 1000.0, 1000.0)
+//    drawer.rectangle(box1)
+//    val font = loadFont("data/fonts/default.otf", 24.0)
+//        drawer.fontMap = font
+//        drawer.fill = ColorRGBa.PINK
+//        writer {
+//            box = Rectangle(300.0, 300.0, 1000.0, 1000.0)
+//        newLine()
+//        text("Here is a line of text..")
+//        newLine()
+//        text("Here is another line of text..")
+//    }
+//}
 
 private fun Program.drawCushion(tableUpperLeft: Vector2) {
     val WIDTH_CUSHION = 25.0
