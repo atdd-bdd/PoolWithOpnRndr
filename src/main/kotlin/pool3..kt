@@ -1,3 +1,5 @@
+import io.ktor.client.*
+import io.ktor.client.plugins.websocket.*
 import org.openrndr.MouseEvent
 import org.openrndr.Program
 import org.openrndr.application
@@ -6,6 +8,7 @@ import org.openrndr.dialogs.getDefaultPathForContext
 import org.openrndr.dialogs.openFileDialog
 import org.openrndr.dialogs.saveFileDialog
 import org.openrndr.dialogs.setDefaultPathForContext
+import org.openrndr.draw.loadFont
 import org.openrndr.extra.color.presets.*
 import org.openrndr.math.Vector2
 import org.openrndr.panel.ControlManager
@@ -14,6 +17,8 @@ import org.openrndr.panel.layout
 import org.openrndr.panel.style.*
 
 import org.openrndr.panel.styleSheet
+import org.openrndr.shape.Rectangle
+import org.openrndr.writer
 import java.io.File
 
 const val BALL_RADIUS = 10.00
@@ -25,6 +30,10 @@ private const val MOUSE_NOT_ON_BALL = -1
 var balls: Array<Ball> = initialBalls()
 
 fun main() = application {
+    val client = HttpClient {
+        install(WebSockets)
+    }
+
     val MINIMUM_RESISTANCE = 0.0
     val MAXIMUM_RESISTANCE = 0.05
     val MAXIMUM_CUSHION_ELASTICITY = 1.0
@@ -45,20 +54,24 @@ fun main() = application {
     val colors = colorOfBalls()
     val stripes = stripOnBalls()
 
-    val tableUpperLeft = Vector2(250.0, 210.0)
+    val tableUpperLeft = Vector2(250.0, 230.0)
 
     var computationSegments = 100
     var yourID =""
     var opponentID =""
+    var yourMessage =""
+    var opponentMessage =""
     configure {
         width = 1200
-        height = 700
+        height = 750
         title = "Pool"
     }
     program {
-
+        var your_turn = true
+         var previousMessageCheck = program.seconds
         var previousTime = program.seconds
         var moving = false
+        var startMoving = false
         var ballMoving = MOUSE_NOT_ON_BALL
         var startPosition = Position(0.0, 0.0)
         val pockets = Pockets()
@@ -87,6 +100,7 @@ fun main() = application {
         }
         extend(ControlManager()) {
             layout {
+
                 backgroundColor = ColorRGBa.WHITE
                 styleSheet(has class_ "horizontal") {
                     paddingLeft = 10.px
@@ -98,6 +112,11 @@ fun main() = application {
                     display = Display.FLEX
                     flexDirection = FlexDirection.Row
                     width = 95.percent
+                }
+                styleSheet(has type "textfield") {
+                    color = Color.RGBa(ColorRGBa.BLACK)
+                    height = 40.px
+                    fontSize = 12.px
                 }
 
                 styleSheet(has type "button") {
@@ -120,15 +139,18 @@ fun main() = application {
                     this.background = Color.RGBa(ColorRGBa.LIGHT_GREEN)
                 }
                 div("horizontal") {
+
                     button {
-                         label = "Cue Stroke"
+                        label = yourTurnLabel(your_turn)
                         clicked {
-                            moving = true
-                            val segmentsPossibly = totalVelocity(startingVelocity) / 0.1
-                            print("*************************Possible segments $segmentsPossibly\n")
-                            computationSegments = 100
-                            previousBalls = balls.map { it.copy() }
-                            hitCue(balls, startingVelocity)
+                            your_turn = !your_turn
+                        }
+                    }
+                    button {
+                        label = "Cue Stroke"
+                        clicked {
+                            startMoving = true
+
                         }
                     }
                     button {
@@ -219,7 +241,7 @@ fun main() = application {
                                 suggestedFilename = "game1.pool",
                                 contextID = "pool",
                                 supportedExtensions = listOf("pool")){
-                                    saveGame(it)
+                                saveGame(it)
                             }
                         }
                     }
@@ -252,36 +274,59 @@ fun main() = application {
                         events.valueChanged.listen { rollingResistance = it.newValue }
                     }
                     textfield() {
-                        style = styleSheet {
-                            width = 100.px
-                        }
                         label = "Your ID"
                         value = yourID
                         events.valueChanged.listen { yourID = it.newValue
-                          }
+                        }
                     }
                     textfield() {
-                        style = styleSheet {
-                            width = 100.px
-                        }
                         label = "Opponent ID"
                         value = opponentID
-                        width = 15
                         events.valueChanged.listen {opponentID = it.newValue
                         }
+                    }
+                    textfield {
+                        style = styleSheet {
+                        }
+                        label = "Message to opponent"
+                        value = yourMessage
+                    }
+                    textfield {
+                        style = styleSheet {
+                            color = Color.RGBa(ColorRGBa.BLACK)
+                            background = Color.RGBa(ColorRGBa.LIGHT_GRAY)
+                        }
+                        label = "Message from opponent"
+                        value = opponentMessage
                     }
 
                 }
             }
+        }
 
             extend {
                 val deltaTime = this.seconds - previousTime
                // val timesPerSecond = 1.0 / deltaTime
                // print("Delta Time is $deltaTime per second $timesPerSecond \n" )
                 previousTime =this.seconds
-
+                val messageTime = this.seconds - previousMessageCheck
+                if ((messageTime > 1.0 && !moving)|| startMoving){
+                    // Output startMoving
+                    outputMessage = "Hello\nHello\nHi"
+                    communication(client)
+                    previousMessageCheck = this.seconds
+                }
                 drawTable(tableUpperLeft, TABLE_SIZE, pockets)
                 drawBalls(balls, colors, stripes  ,tableUpperLeft)
+                if (startMoving){
+                    startMoving = false
+                    moving = true
+                    val segmentsPossibly = totalVelocity(startingVelocity) / 0.1
+                    print("*************************Possible segments $segmentsPossibly\n")
+                    computationSegments = 100
+                    previousBalls = balls.map { it.copy() }
+                    hitCue(balls, startingVelocity)
+                }
                 if (moving) {
                     moveBalls(
                         balls,
@@ -306,7 +351,8 @@ fun main() = application {
             }
         }
     }
-}
+
+
 
 fun Program.loadGame(it: File){
     print("Loading game from $it")
@@ -484,8 +530,23 @@ private fun Program.drawTable(tableUpperLeft: Vector2, tableSize: Vector2, pocke
     drawer.strokeWeight = 4.0
 
     drawPockets(tableUpperLeft, pockets)
-
-
+}
+fun Program.drawChat(){
+    drawer.fill = ColorRGBa.GRAY
+    drawer.stroke = ColorRGBa.GRAY
+    drawer.strokeWeight = 2.0
+    var box1 = Rectangle(300.0, 300.0, 1000.0, 1000.0)
+    drawer.rectangle(box1)
+    val font = loadFont("data/fonts/default.otf", 24.0)
+        drawer.fontMap = font
+        drawer.fill = ColorRGBa.PINK
+        writer {
+            box = Rectangle(300.0, 300.0, 1000.0, 1000.0)
+        newLine()
+        text("Here is a line of text..")
+        newLine()
+        text("Here is another line of text..")
+    }
 }
 
 private fun Program.drawCushion(tableUpperLeft: Vector2) {
@@ -531,6 +592,17 @@ private fun Program.drawPockets(tableUpperLeft: Vector2, pockets: Pockets) {
 
    */
 }
+fun yourTurnLabel(your_turn: Boolean ) : String
+{
+    val yourTurnLabel =     "Turn:     Yours"
+    val opponentTurnLabel = "Turn: Opponents"
+    if (your_turn){
+        return yourTurnLabel
+    }
+    else
+        return opponentTurnLabel
+}
+
 
 fun Program.drawPocketCircle(circle: Circle, tableUpperLeft: Vector2) {
     drawer.fill = ColorRGBa.DARK_GREEN

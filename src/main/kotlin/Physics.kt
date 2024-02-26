@@ -240,7 +240,7 @@ fun xyFromAngle(angle: Double): Percentage {
 
 fun stoppedMoving(balls: Array<Ball>): Boolean {
 
-    val STOPPED_SPEED = .5
+    val STOPPED_SPEED = 2.5
     var stopped = true
     var thisStopped: Boolean
     for (index in balls.indices) {

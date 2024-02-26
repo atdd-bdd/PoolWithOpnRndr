@@ -102,6 +102,10 @@ dependencies {
 //    implementation(libs.gson)
 //    implementation(libs.csv)
 
+    implementation("io.ktor:ktor-client-core:2.3.7")
+    implementation("io.ktor:ktor-client-cio:2.3.7")
+    implementation("org.slf4j:slf4j-simple:2.0.9")
+    implementation("io.ktor:ktor-client-websockets:2.3.7")
 
     implementation(libs.kotlinx.coroutines.core)
     implementation(libs.slf4j.api)
@@ -144,6 +148,7 @@ tasks {
             attributes["Implementation-Version"] = project.version
         }
         minimize {
+            exclude(dependency("io.ktor:.*"))
             exclude(dependency("org.openrndr:openrndr-gl3:.*"))
             exclude(dependency("org.jetbrains.kotlin:kotlin-reflect:.*"))
             exclude(dependency("org.slf4j:slf4j-simple:.*"))
