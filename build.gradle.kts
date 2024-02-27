@@ -147,7 +147,9 @@ tasks {
             attributes["Main-Class"] = applicationMainClass
             attributes["Implementation-Version"] = project.version
         }
+//        include("data/fonts/default.otf")
         minimize {
+
             exclude(dependency("io.ktor:.*"))
             exclude(dependency("org.openrndr:openrndr-gl3:.*"))
             exclude(dependency("org.jetbrains.kotlin:kotlin-reflect:.*"))

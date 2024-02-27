@@ -1,8 +1,6 @@
 import io.ktor.client.*
 import io.ktor.client.plugins.websocket.*
-import org.openrndr.MouseEvent
-import org.openrndr.Program
-import org.openrndr.application
+import org.openrndr.*
 import org.openrndr.color.ColorRGBa
 import org.openrndr.dialogs.getDefaultPathForContext
 import org.openrndr.dialogs.openFileDialog
@@ -15,10 +13,10 @@ import org.openrndr.panel.ControlManager
 import org.openrndr.panel.elements.*
 import org.openrndr.panel.layout
 import org.openrndr.panel.style.*
+import org.openrndr.panel.style.Display
 
 import org.openrndr.panel.styleSheet
 import org.openrndr.shape.Rectangle
-import org.openrndr.writer
 import java.io.File
 
 const val BALL_RADIUS = 10.00
@@ -39,6 +37,7 @@ fun main() = application {
     val MAXIMUM_CUSHION_ELASTICITY = 1.0
     val MAXIMUM_RESTITUTION = 1.0
     val MAXIMUM_FORCE = 5000.0
+
 
     var cueAngle = 0.0
     var cueForce = 0.0
@@ -67,6 +66,8 @@ fun main() = application {
         title = "Pool"
     }
     program {
+        var messageIn = Message()
+        var messageOut = Message()
         var your_turn = true
          var previousMessageCheck = program.seconds
         var previousTime = program.seconds
@@ -130,7 +131,7 @@ fun main() = application {
                     height = 40.px
                 }
                 styleSheet(has class_ "side-bar") {
-                    this.height = 100.percent
+                    this.height = 40.percent
                     this.width = 200.px
                     this.display = Display.FLEX
                     this.flexDirection = FlexDirection.Column
@@ -140,13 +141,6 @@ fun main() = application {
                 }
                 div("horizontal") {
 
-                    button {
-                        label = "None"
-                        clicked {
-                            your_turn = !your_turn
-                            label = yourTurnLabel(your_turn)
-                        }
-                    }
 
                     button {
                         label = "Cue Stroke"
@@ -173,33 +167,6 @@ fun main() = application {
                             rackBalls(balls)
                         }
                     }
-                    slider {
-                        style = styleSheet {
-                            width = 100.px
-                        }
-                        label = "Display Speed"
-                        value = displayIncrement.toDouble()
-                        range = Range(1.0, computationSegments.toDouble())
-                        events.valueChanged.listen { displayIncrement = (it.newValue + .01).toInt() }
-                    }
-                }//div
-                div("horizontal") {
-                    slider {
-                        label = "Force"
-                        value = cueForce
-                        range = Range(0.0, MAXIMUM_FORCE)
-                        events.valueChanged.listen { cueForce = it.newValue }
-                    }
-                }//div
-                div("horizontal") {
-                    slider {
-                        label = "Angle"
-                        value = cueAngle
-                        range = Range(0.0, 360.0)
-                        events.valueChanged.listen { cueAngle = it.newValue }
-                    }
-                }//div
-                div("side-bar") {
                     button {
                         label = "Load Game"
                         clicked {
@@ -247,6 +214,33 @@ fun main() = application {
                             }
                         }
                     }
+                    slider {
+                        style = styleSheet {
+                            width = 100.px
+                        }
+                        label = "Display Speed"
+                        value = displayIncrement.toDouble()
+                        range = Range(1.0, computationSegments.toDouble())
+                        events.valueChanged.listen { displayIncrement = (it.newValue + .01).toInt() }
+                    }
+                }//div
+                div("horizontal") {
+                    slider {
+                        label = "Force"
+                        value = cueForce
+                        range = Range(0.0, MAXIMUM_FORCE)
+                        events.valueChanged.listen { cueForce = it.newValue }
+                    }
+                }//div
+                div("horizontal") {
+                    slider {
+                        label = "Angle"
+                        value = cueAngle
+                        range = Range(0.0, 360.0)
+                        events.valueChanged.listen { cueAngle = it.newValue }
+                    }
+                }//div
+                div("side-bar") {
 
                     slider {
                         style = styleSheet {
@@ -293,14 +287,13 @@ fun main() = application {
                         label = "Message to opponent"
                         value = yourMessage
                     }
-                    textfield {
-                        style = styleSheet {
-                            color = Color.RGBa(ColorRGBa.BLACK)
-                            background = Color.RGBa(ColorRGBa.LIGHT_GRAY)
+                    button {
+                        label = "Switch turn"
+                        clicked {
+                            your_turn = !your_turn
                         }
-                        label = "Message from opponent"
-                        value = opponentMessage
                     }
+
 
                 }
             }
@@ -314,14 +307,43 @@ fun main() = application {
                 val messageTime = this.seconds - previousMessageCheck
                 if ((messageTime > 1.0 && !moving)|| startMoving){
                     // Output startMoving
-                    outputMessage = "Hello\nHello\nHi"
-                    communication(client)
+                    messageOut.balls = balls
+
+                    messageOut.configuration.cueAngle = cueAngle
+                    messageOut.configuration.cueForce = cueForce
+                    messageOut.configuration.cushionElasticity = cushionElasticity
+                    messageOut.configuration.restitution = restitution
+                    messageOut.configuration.displayIncrement = displayIncrement
+                    messageOut.configuration.rollingResistance = rollingResistance
+
+                    messageOut.header.opponentID = opponentID
+                    messageOut.header.yourID = yourID
+                    messageOut.header.opponentMessage = opponentMessage
+                    messageOut.header.yourMessage = yourMessage
+                    messageOut.header.startMoving = startMoving
+                    messageOut.header.yourTurn = your_turn
+                    println("Sending $rollingResistance")
+                    messageIn = communication(client, messageOut)
+                    if (!your_turn){
+                        balls = messageIn.balls
+                        cueAngle = messageIn.configuration.cueAngle
+                        cueForce = messageIn.configuration.cueForce
+                        cushionElasticity =messageIn.configuration.cushionElasticity
+                        restitution =messageIn.configuration.restitution
+                         displayIncrement=messageIn.configuration.displayIncrement
+                         rollingResistance=messageIn.configuration.rollingResistance
+//                         opponentID=messageIn.header.opponentID
+//                         yourID=messageIn.header.yourID
+                         opponentMessage=messageIn.header.opponentMessage
+                         startMoving=messageIn.header.startMoving
+                         your_turn = messageIn.header.yourTurn
+                         print("Received Your turn $your_turn  starting $startMoving  rolling $rollingResistance")
+                    }
                     previousMessageCheck = this.seconds
                 }
                 drawTable(tableUpperLeft, TABLE_SIZE, pockets)
                 drawBalls(balls, colors, stripes  ,tableUpperLeft)
                 if (startMoving){
-                    startMoving = false
                     moving = true
                     val segmentsPossibly = totalVelocity(startingVelocity) / 0.1
                     print("*************************Possible segments $segmentsPossibly\n")
@@ -329,7 +351,9 @@ fun main() = application {
                     previousBalls = balls.map { it.copy() }
                     hitCue(balls, startingVelocity)
                 }
+                drawChat(your_turn, opponentMessage)
                 if (moving) {
+                    startMoving = false
                     moveBalls(
                         balls,
                         TABLE_SIZE,
@@ -364,19 +388,26 @@ fun Program.loadGame(it: File){
 }
 
 fun readGameString(text: String, balls: Array<Ball>): Array<Ball> {
-    val ballsOut = balls
-    val lines = text.split("\n")
+    var ballsOut = balls
+    val lines = text.split("\r\n", "\n", "\r");
+    ballsOut = readGameStringList(lines, balls)
+    return ballsOut
+}
+
+fun readGameStringList(lines: List<String>, balls: Array<Ball>) : Array<Ball>{
+    if (lines.size < 16) {
+        println("Not changing balls on input")
+        return balls
+    }
+    var ballsOut = balls
     var firstLine = true
     var index = 0
     for (line in lines) {
         if (firstLine) {
-            print(line)
             firstLine = false
             continue
         }
-        print(line + "\n")
         val fields = line.split(',')
-        print(fields + "\n")
         try {
             val ball = Ball(
                 fields[0].toInt(), Position(
@@ -385,19 +416,18 @@ fun readGameString(text: String, balls: Array<Ball>): Array<Ball> {
                 ), Velocity(fields[3].toDouble(), fields[4].toDouble()),
                 fields[5].toBoolean())
             ballsOut[index] = ball
-                        index++
+            index++
 
         }
         catch(e: NumberFormatException){
             print("Number format exception")
-            }
+        }
         val size = ballsOut.size
         if (index >= size)
             break
     }
     return ballsOut
 }
-
 fun Program.saveGame(it: File) {
     print("Storing game into $it")
     val text = getGameString(balls)
@@ -405,18 +435,21 @@ fun Program.saveGame(it: File) {
 }
 
 fun getGameString(balls: Array<Ball>): String {
-    val result = StringBuilder()
-    result.append("Symbol,PositionX,PositionY,VelocityX,VelocityY,Active\n")
+    val list = getGameStringList(balls)
+    return list.joinToString(separator = "\n")
+}
+
+fun getGameStringList(balls: Array<Ball>): List<String>{
+    var result = mutableListOf<String>()
+    result.add("Symbol,PositionX,PositionY,VelocityX,VelocityY,Active")
     for (i in balls.indices){
         val ball =  balls[i]
         val line = String.format("${ball.symbol},${ball.position.x},${ball.position.y}," +
-                "${ball.velocity.x},${ball.velocity.y},${ball.active}\n")
-        result.append(line)
+                "${ball.velocity.x},${ball.velocity.y},${ball.active}")
+        result.add(line)
     }
-    return result.toString()
+    return result
 }
-
-
 private fun mouseToPosition(it: MouseEvent, tableUpperLeft: Vector2) =
     Position(it.position.x - tableUpperLeft.x, it.position.y - tableUpperLeft.y)
 
@@ -533,23 +566,27 @@ private fun Program.drawTable(tableUpperLeft: Vector2, tableSize: Vector2, pocke
 
     drawPockets(tableUpperLeft, pockets)
 }
-//fun Program.drawChat(){
-//    drawer.fill = ColorRGBa.GRAY
-//    drawer.stroke = ColorRGBa.GRAY
-//    drawer.strokeWeight = 2.0
-//    var box1 = Rectangle(300.0, 300.0, 1000.0, 1000.0)
-//    drawer.rectangle(box1)
-//    val font = loadFont("data/fonts/default.otf", 24.0)
-//        drawer.fontMap = font
-//        drawer.fill = ColorRGBa.PINK
-//        writer {
-//            box = Rectangle(300.0, 300.0, 1000.0, 1000.0)
-//        newLine()
-//        text("Here is a line of text..")
-//        newLine()
-//        text("Here is another line of text..")
-//    }
-//}
+fun Program.drawChat(your_turn: Boolean, opponentMessage: String){
+    drawer.fill = ColorRGBa.GRAY
+    drawer.stroke = ColorRGBa.GRAY
+    drawer.strokeWeight = 2.0
+    var box1 = Rectangle(0.0, 500.0, 200.0, 200.0)
+    drawer.rectangle(box1)
+    val font = loadFont("data/fonts/default.otf", 24.0)
+        drawer.fontMap = font
+        drawer.fill = ColorRGBa.PINK
+        writer { box = Rectangle(10.0, 500.0, 180.0, 40.0)
+        newLine()
+        text(yourTurnLabel(your_turn))
+    }
+    val font1 = loadFont("data/fonts/default.otf", 12.0)
+    drawer.fontMap = font1
+    drawer.fill = ColorRGBa.PINK
+    writer { box = Rectangle(10.0, 600.0, 180.0, 200.0)
+        newLine()
+        text(opponentMessage)
+    }
+}
 
 private fun Program.drawCushion(tableUpperLeft: Vector2) {
     val WIDTH_CUSHION = 25.0
@@ -643,7 +680,7 @@ private fun Program.drawBall(
     }
 }
 
-private fun initialBalls(): Array<Ball> {
+ fun initialBalls(): Array<Ball> {
     return arrayOf(
         Ball(0, Position(160.0, 200.0), Velocity(0.0, 0.0), true),
         Ball(1, Position(200.0, 300.0), Velocity(0.0, 0.0), true),

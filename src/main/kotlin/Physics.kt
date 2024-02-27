@@ -12,11 +12,11 @@ fun moveBalls(
     deltaTime: Double,
     pockets: Pockets
 ) {
-    print (" DeltaTime " +  deltaTime.toString() )
-    print (" Segments " + segments.toString() +
-            " displayIncremenat "  + displayIncrement.toString())
-    print ("Velocity " + balls[0].velocity.x + " " + balls[0].velocity.y)
-        print("\n")
+//    print (" DeltaTime " +  deltaTime.toString() )
+//    print (" Segments " + segments.toString() +
+//            " displayIncremenat "  + displayIncrement.toString())
+//    print ("Velocity " + balls[0].velocity.x + " " + balls[0].velocity.y)
+//        print("\n")
 
     for (loop in 0 until displayIncrement) {
         // Compute the new position of the pool ball
@@ -109,8 +109,9 @@ fun computeCollisionVelocity(
 
     val checkColliding = (vx21 * x21 + vy21 * y21)
     if (checkColliding >= 0) {
-        if (checkColliding > 0)
-            print ("Not colliding " + checkColliding.toString())
+        if (checkColliding > 0) {
+//            print("Not colliding " + checkColliding.toString())
+        }
         return TwoVelocities(velocity1, velocity2)
     }
 //     *** I have inserted the following statements to avoid a zero divide;
