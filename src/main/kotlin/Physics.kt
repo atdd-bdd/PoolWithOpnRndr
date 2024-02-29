@@ -17,8 +17,8 @@ fun moveBalls(
 //            " displayIncremenat "  + displayIncrement.toString())
 //    print ("Velocity " + balls[0].velocity.x + " " + balls[0].velocity.y)
 //        print("\n")
-
-    for (loop in 0 until displayIncrement) {
+    val displayIncrementToUse = displayIncrement
+    for (loop in 0 until displayIncrementToUse) {
         // Compute the new position of the pool ball
         for (index in balls.indices) {
             val ball = balls[index]
@@ -241,7 +241,7 @@ fun xyFromAngle(angle: Double): Percentage {
 
 fun stoppedMoving(balls: Array<Ball>): Boolean {
 
-    val STOPPED_SPEED = 2.5
+    val STOPPED_SPEED = 4.0
     var stopped = true
     var thisStopped: Boolean
     for (index in balls.indices) {

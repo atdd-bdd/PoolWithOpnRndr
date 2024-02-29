@@ -25,7 +25,6 @@ val TABLE_SIZE = Vector2(900.0, 450.0)
 
 private const val MOUSE_NOT_ON_BALL = -1
 
-var balls: Array<Ball> = initialBalls()
 
 fun main() = application {
     val client = HttpClient {
@@ -38,6 +37,7 @@ fun main() = application {
     val MAXIMUM_RESTITUTION = 1.0
     val MAXIMUM_FORCE = 5000.0
 
+    var balls: Array<Ball> = initialBalls()
 
     var cueAngle = 0.0
     var cueForce = 0.0
@@ -48,18 +48,20 @@ fun main() = application {
     var cushionElasticity = 0.70
 
     var displayIncrement = 100
-    var previousBalls: List<Ball> = balls.map { it.copy() }
-
+    var previousBalls = initialBalls()
+    var previousMessageDateStamp = 0.0
+    var moveCount = 0
+    var totalMoveTime = 0.0
     val colors = colorOfBalls()
     val stripes = stripOnBalls()
 
     val tableUpperLeft = Vector2(250.0, 230.0)
 
     var computationSegments = 100
-    var yourID =""
-    var opponentID =""
-    var yourMessage =""
-    var opponentMessage =""
+    var yourID = ""
+    var opponentID = ""
+    var yourMessage = ""
+    var opponentMessage = ""
     configure {
         width = 1200
         height = 750
@@ -69,7 +71,7 @@ fun main() = application {
         var messageIn = Message()
         var messageOut = Message()
         var your_turn = true
-         var previousMessageCheck = program.seconds
+        var previousMessageCheck = program.seconds
         var previousTime = program.seconds
         var moving = false
         var startMoving = false
@@ -89,7 +91,7 @@ fun main() = application {
         mouse.buttonUp.listen {
             //print( it.position.toString() + "\n")
             if (ballMoving != MOUSE_NOT_ON_BALL) {
-                val endPosition =  mouseToPosition(it, tableUpperLeft)
+                val endPosition = mouseToPosition(it, tableUpperLeft)
                 balls[ballMoving].position =
                     checkForDropLocation(ballMoving, startPosition, endPosition, balls)
             }
@@ -117,7 +119,7 @@ fun main() = application {
                 styleSheet(has type "textfield") {
                     color = Color.RGBa(ColorRGBa.BLACK)
                     height = 40.px
-                    fontSize = 12.px
+                    fontSize = 16.px
                 }
 
                 styleSheet(has type "button") {
@@ -129,6 +131,7 @@ fun main() = application {
                     color = Color.RGBa(ColorRGBa.YELLOW)
                     background = Color.RGBa(ColorRGBa.DARK_BLUE)
                     height = 40.px
+                    fontSize = 16.px
                 }
                 styleSheet(has class_ "side-bar") {
                     this.height = 40.percent
@@ -152,7 +155,7 @@ fun main() = application {
                     button {
                         label = "Replay"
                         clicked {
-                            balls = restoreBalls(previousBalls)
+                            balls = copyBalls(previousBalls)
                         }
                     }
                     button {
@@ -170,7 +173,7 @@ fun main() = application {
                     button {
                         label = "Load Game"
                         clicked {
-                            openFileDialog(supportedExtensions = listOf("pool"), contextID = "pool"){loadGame(it)}
+                            openFileDialog(supportedExtensions = listOf("pool"), contextID = "pool") { loadGame(it, balls) }
                             print("Load file")
                         }
                     }
@@ -201,7 +204,7 @@ fun main() = application {
                                             file = parameters
                                         )
                                     } else {
-                                        print ("Could not create directory ${parameters.absolutePath}" )
+                                        print("Could not create directory ${parameters.absolutePath}")
                                     }
                                 }
                             }
@@ -209,8 +212,9 @@ fun main() = application {
                             saveFileDialog(
                                 suggestedFilename = "game1.pool",
                                 contextID = "pool",
-                                supportedExtensions = listOf("pool")){
-                                saveGame(it)
+                                supportedExtensions = listOf("pool")
+                            ) {
+                                saveGame(it, balls)
                             }
                         }
                     }
@@ -272,13 +276,15 @@ fun main() = application {
                     textfield() {
                         label = "Your ID"
                         value = yourID
-                        events.valueChanged.listen { yourID = it.newValue
+                        events.valueChanged.listen {
+                            yourID = it.newValue
                         }
                     }
                     textfield() {
                         label = "Opponent ID"
                         value = opponentID
-                        events.valueChanged.listen {opponentID = it.newValue
+                        events.valueChanged.listen {
+                            opponentID = it.newValue
                         }
                     }
                     textfield {
@@ -286,11 +292,15 @@ fun main() = application {
                         }
                         label = "Message to opponent"
                         value = yourMessage
+                        events.valueChanged.listen {
+                            yourMessage = it.newValue
+                        }
                     }
                     button {
                         label = "Switch turn"
                         clicked {
                             your_turn = !your_turn
+                            println("Your turn $your_turn")
                         }
                     }
 
@@ -299,107 +309,126 @@ fun main() = application {
             }
         }
 
-            extend {
-                val deltaTime = this.seconds - previousTime
-               // val timesPerSecond = 1.0 / deltaTime
-               // print("Delta Time is $deltaTime per second $timesPerSecond \n" )
-                previousTime =this.seconds
-                val messageTime = this.seconds - previousMessageCheck
-                if ((messageTime > 1.0 && !moving)|| startMoving){
-                    // Output startMoving
-                    messageOut.balls = balls
+        extend {
+            val deltaTime = this.seconds - previousTime
+            // val timesPerSecond = 1.0 / deltaTime
+            // print("Delta Time is $deltaTime per second $timesPerSecond \n" )
+            previousTime = this.seconds
 
-                    messageOut.configuration.cueAngle = cueAngle
-                    messageOut.configuration.cueForce = cueForce
-                    messageOut.configuration.cushionElasticity = cushionElasticity
-                    messageOut.configuration.restitution = restitution
-                    messageOut.configuration.displayIncrement = displayIncrement
-                    messageOut.configuration.rollingResistance = rollingResistance
 
-                    messageOut.header.opponentID = opponentID
-                    messageOut.header.yourID = yourID
-                    messageOut.header.opponentMessage = opponentMessage
-                    messageOut.header.yourMessage = yourMessage
-                    messageOut.header.startMoving = startMoving
-                    messageOut.header.yourTurn = your_turn
-                    println("Sending $rollingResistance")
-                    messageIn = communication(client, messageOut)
-                    if (!your_turn){
-                        balls = messageIn.balls
-                        cueAngle = messageIn.configuration.cueAngle
-                        cueForce = messageIn.configuration.cueForce
-                        cushionElasticity =messageIn.configuration.cushionElasticity
-                        restitution =messageIn.configuration.restitution
-                         displayIncrement=messageIn.configuration.displayIncrement
-                         rollingResistance=messageIn.configuration.rollingResistance
+            val messageTime = this.seconds - previousMessageCheck
+            val addressesSet = opponentID != "" && yourID != ""
+            if (((messageTime > 1.0 && !moving) || startMoving) && addressesSet) {
+                messageOut.ballsAll = balls
+                messageOut.configuration.cueAngle = cueAngle
+                messageOut.configuration.cueForce = cueForce
+                messageOut.configuration.cushionElasticity = cushionElasticity
+                messageOut.configuration.restitution = restitution
+                messageOut.configuration.displayIncrement = displayIncrement
+                messageOut.configuration.rollingResistance = rollingResistance
+                messageOut.header.opponentID = opponentID
+                messageOut.header.yourID = yourID
+                messageOut.header.opponentMessage = opponentMessage
+                messageOut.header.yourMessage = yourMessage
+                messageOut.header.startMoving = startMoving
+                messageOut.header.yourTurn = your_turn
+                messageOut.header.dateStamp = program.seconds
+                println("Sending $rollingResistance $your_turn")
+
+                val inputText = communication(client, messageOut.toString())
+
+                val goodMessage = messageIn.fromString(inputText)
+                if (goodMessage) {
+                    your_turn = ! messageIn.header.yourTurn
+                    opponentMessage = messageIn.header.opponentMessage
+                }
+                if (!your_turn && goodMessage && previousMessageDateStamp !=
+                    messageIn.header.dateStamp
+                ) {
+                    balls = messageIn.ballsAll
+                    cueAngle = messageIn.configuration.cueAngle
+                    cueForce = messageIn.configuration.cueForce
+                    cushionElasticity = messageIn.configuration.cushionElasticity
+                    restitution = messageIn.configuration.restitution
+                    displayIncrement = messageIn.configuration.displayIncrement
+                    rollingResistance = messageIn.configuration.rollingResistance
 //                         opponentID=messageIn.header.opponentID
 //                         yourID=messageIn.header.yourID
-                         opponentMessage=messageIn.header.opponentMessage
-                         startMoving=messageIn.header.startMoving
-                         your_turn = messageIn.header.yourTurn
-                         print("Received Your turn $your_turn  starting $startMoving  rolling $rollingResistance")
-                    }
-                    previousMessageCheck = this.seconds
+                    opponentMessage = messageIn.header.opponentMessage
+                    startMoving = messageIn.header.startMoving
+                    your_turn = !messageIn.header.yourTurn
+                    previousMessageDateStamp = messageIn.header.dateStamp
+                    print("Received Your turn $your_turn  starting $startMoving")
                 }
-                drawTable(tableUpperLeft, TABLE_SIZE, pockets)
-                drawBalls(balls, colors, stripes  ,tableUpperLeft)
-                if (startMoving){
-                    moving = true
-                    val segmentsPossibly = totalVelocity(startingVelocity) / 0.1
-                    print("*************************Possible segments $segmentsPossibly\n")
-                    computationSegments = 100
-                    previousBalls = balls.map { it.copy() }
-                    hitCue(balls, startingVelocity)
+                previousMessageCheck = this.seconds
+
+            }
+            drawTable(tableUpperLeft, TABLE_SIZE, pockets)
+            drawBalls(balls, colors, stripes, tableUpperLeft)
+            drawChat(your_turn, opponentMessage)
+            if (startMoving) {
+                moveCount = 0
+                totalMoveTime = 0.0
+                moving = true
+//                val segmentsPossibly = totalVelocity(startingVelocity) / 0.1
+//                    print("*************************Possible segments $segmentsPossibly\n")
+                computationSegments = 100
+                previousBalls = copyBalls(balls)
+                hitCue(balls, startingVelocity)
+            }
+            if (moving) {
+                startMoving = false
+                moveBalls(
+                    balls,
+                    TABLE_SIZE,
+                    cushionElasticity,
+                    restitution,
+                    rollingResistance,
+                    computationSegments,
+                    displayIncrement,
+                    deltaTime,
+                    pockets
+                )
+                val time = program.seconds
+                totalMoveTime += deltaTime
+                //println("Delta time $deltaTime move $moveCount total $totalMoveTime")
+                println("$deltaTime,")
+                moveCount++
+
+                if (stoppedMoving(balls)) {
+                    moving = false
+                    stopAll(balls)
                 }
-                drawChat(your_turn, opponentMessage)
-                if (moving) {
-                    startMoving = false
-                    moveBalls(
-                        balls,
-                        TABLE_SIZE,
-                        cushionElasticity,
-                        restitution,
-                        rollingResistance,
-                        computationSegments,
-                        displayIncrement,
-                        deltaTime,
-                        pockets
-                    )
-                    if (stoppedMoving(balls)) {
-                        moving = false
-                        stopAll(balls)
-                    }
-                } else {
-                    val percentage: Percentage = xyFromAngle(cueAngle)
-                    startingVelocity = Velocity(cueForce * percentage.x, cueForce * percentage.y)
-                    drawCueLine(balls, tableUpperLeft, cueForce / MAXIMUM_FORCE, percentage, TABLE_SIZE.x)
-                }
+            } else {
+                val percentage: Percentage = xyFromAngle(cueAngle)
+                startingVelocity = Velocity(cueForce * percentage.x, cueForce * percentage.y)
+                drawCueLine(balls, tableUpperLeft, cueForce / MAXIMUM_FORCE, percentage, TABLE_SIZE.x)
             }
         }
     }
-
-
-
-fun Program.loadGame(it: File){
-    print("Loading game from $it")
-    val text =  it.readText()
-     balls= readGameString(text, balls)
-    return
 }
 
-fun readGameString(text: String, balls: Array<Ball>): Array<Ball> {
-    var ballsOut = balls
-    val lines = text.split("\r\n", "\n", "\r");
-    ballsOut = readGameStringList(lines, balls)
+
+fun Program.loadGame(it: File, ballsCurrent: Array<Ball>) : Array<Ball>{
+    print("Loading game from $it")
+    val text = it.readText()
+    val ballsOut = readGameString(text, ballsCurrent)
     return ballsOut
 }
 
-fun readGameStringList(lines: List<String>, balls: Array<Ball>) : Array<Ball>{
-    if (lines.size < 16) {
+fun readGameString(text: String, ballsCurrent: Array<Ball>): Array<Ball> {
+    val lines = text.split("\r\n", "\n", "\r");
+    val  ballsOut = readGameStringList(lines, ballsCurrent)
+    return ballsOut
+}
+
+fun readGameStringList(lines: List<String>, ballsCurrent: Array<Ball>): Array<Ball> {
+    val ballsOut = copyBalls(ballsCurrent)
+    if (lines.size < 17) {
         println("Not changing balls on input")
-        return balls
+        return ballsOut
     }
-    var ballsOut = balls
+
     var firstLine = true
     var index = 0
     for (line in lines) {
@@ -414,12 +443,12 @@ fun readGameStringList(lines: List<String>, balls: Array<Ball>) : Array<Ball>{
                     fields[1].toDouble(),
                     fields[2].toDouble()
                 ), Velocity(fields[3].toDouble(), fields[4].toDouble()),
-                fields[5].toBoolean())
+                fields[5].toBoolean()
+            )
             ballsOut[index] = ball
             index++
 
-        }
-        catch(e: NumberFormatException){
+        } catch (e: NumberFormatException) {
             print("Number format exception")
         }
         val size = ballsOut.size
@@ -428,9 +457,10 @@ fun readGameStringList(lines: List<String>, balls: Array<Ball>) : Array<Ball>{
     }
     return ballsOut
 }
-fun Program.saveGame(it: File) {
+
+fun Program.saveGame(it: File, ballsIn: Array<Ball>) {
     print("Storing game into $it")
-    val text = getGameString(balls)
+    val text = getGameString(ballsIn)
     it.writeText(text)
 }
 
@@ -439,17 +469,20 @@ fun getGameString(balls: Array<Ball>): String {
     return list.joinToString(separator = "\n")
 }
 
-fun getGameStringList(balls: Array<Ball>): List<String>{
+fun getGameStringList(balls: Array<Ball>): List<String> {
     var result = mutableListOf<String>()
     result.add("Symbol,PositionX,PositionY,VelocityX,VelocityY,Active")
-    for (i in balls.indices){
-        val ball =  balls[i]
-        val line = String.format("${ball.symbol},${ball.position.x},${ball.position.y}," +
-                "${ball.velocity.x},${ball.velocity.y},${ball.active}")
+    for (i in balls.indices) {
+        val ball = balls[i]
+        val line = String.format(
+            "${ball.symbol},${ball.position.x},${ball.position.y}," +
+                    "${ball.velocity.x},${ball.velocity.y},${ball.active}"
+        )
         result.add(line)
     }
     return result
 }
+
 private fun mouseToPosition(it: MouseEvent, tableUpperLeft: Vector2) =
     Position(it.position.x - tableUpperLeft.x, it.position.y - tableUpperLeft.y)
 
@@ -483,8 +516,10 @@ private fun Program.drawBalls(
     for (index in balls.indices) {
         val ball = balls[index]
         val ballColorIndex = ball.symbol
-        drawBall(ball.position, BALL_RADIUS, colors[ballColorIndex],
-            hasStripe[ballColorIndex], tableUpperLeft)
+        drawBall(
+            ball.position, BALL_RADIUS, colors[ballColorIndex],
+            hasStripe[ballColorIndex], tableUpperLeft
+        )
     }
 }
 
@@ -507,7 +542,8 @@ private fun colorOfBalls() = arrayOf(
     ColorRGBa.MAGENTA,
     ColorRGBa.ORANGE,
     ColorRGBa.GREEN,
-    ColorRGBa.DARK_MAGENTA,)
+    ColorRGBa.DARK_MAGENTA,
+)
 
 private fun stripOnBalls() = arrayOf(
     false,
@@ -529,7 +565,7 @@ private fun stripOnBalls() = arrayOf(
     true,
     true,
     true,
- )
+)
 
 private fun Program.drawCueLine(
     balls: Array<Ball>, tableUpperLeft: Vector2, cueForce: Double, percentage: Percentage, length: Double,
@@ -566,23 +602,26 @@ private fun Program.drawTable(tableUpperLeft: Vector2, tableSize: Vector2, pocke
 
     drawPockets(tableUpperLeft, pockets)
 }
-fun Program.drawChat(your_turn: Boolean, opponentMessage: String){
+
+fun Program.drawChat(your_turn: Boolean, opponentMessage: String) {
     drawer.fill = ColorRGBa.GRAY
     drawer.stroke = ColorRGBa.GRAY
     drawer.strokeWeight = 2.0
     var box1 = Rectangle(0.0, 500.0, 200.0, 200.0)
     drawer.rectangle(box1)
     val font = loadFont("data/fonts/default.otf", 24.0)
-        drawer.fontMap = font
-        drawer.fill = ColorRGBa.PINK
-        writer { box = Rectangle(10.0, 500.0, 180.0, 40.0)
+    drawer.fontMap = font
+    drawer.fill = ColorRGBa.PINK
+    writer {
+        box = Rectangle(10.0, 500.0, 180.0, 40.0)
         newLine()
         text(yourTurnLabel(your_turn))
     }
-    val font1 = loadFont("data/fonts/default.otf", 12.0)
+    val font1 = loadFont("data/fonts/default.otf", 18.0)
     drawer.fontMap = font1
     drawer.fill = ColorRGBa.PINK
-    writer { box = Rectangle(10.0, 600.0, 180.0, 200.0)
+    writer {
+        box = Rectangle(10.0, 600.0, 180.0, 200.0)
         newLine()
         text(opponentMessage)
     }
@@ -592,16 +631,24 @@ private fun Program.drawCushion(tableUpperLeft: Vector2) {
     val WIDTH_CUSHION = 25.0
     val HALF_WIDTH_CUSHION = WIDTH_CUSHION / 2.0
     drawer.fill = ColorRGBa.LIGHT_GREEN
-    drawer.strokeWeight =WIDTH_CUSHION
+    drawer.strokeWeight = WIDTH_CUSHION
     drawer.stroke = ColorRGBa.LIGHT_GREEN
-    drawer.lineSegment(tableUpperLeft.x - WIDTH_CUSHION, tableUpperLeft.y -HALF_WIDTH_CUSHION,
-        tableUpperLeft.x + TABLE_SIZE.x + WIDTH_CUSHION, tableUpperLeft.y - HALF_WIDTH_CUSHION )
-    drawer.lineSegment(tableUpperLeft.x - WIDTH_CUSHION, tableUpperLeft.y + TABLE_SIZE.y + HALF_WIDTH_CUSHION,
-        tableUpperLeft.x + TABLE_SIZE.x + WIDTH_CUSHION, tableUpperLeft.y + TABLE_SIZE.y + HALF_WIDTH_CUSHION )
-    drawer.lineSegment(tableUpperLeft.x - HALF_WIDTH_CUSHION, tableUpperLeft.y -WIDTH_CUSHION,
-        tableUpperLeft.x + - HALF_WIDTH_CUSHION, tableUpperLeft.y + TABLE_SIZE.y + WIDTH_CUSHION)
-    drawer.lineSegment(tableUpperLeft.x + TABLE_SIZE.x + HALF_WIDTH_CUSHION, tableUpperLeft.y -WIDTH_CUSHION,
-        tableUpperLeft.x + TABLE_SIZE.x + HALF_WIDTH_CUSHION, tableUpperLeft.y + TABLE_SIZE.y + WIDTH_CUSHION )
+    drawer.lineSegment(
+        tableUpperLeft.x - WIDTH_CUSHION, tableUpperLeft.y - HALF_WIDTH_CUSHION,
+        tableUpperLeft.x + TABLE_SIZE.x + WIDTH_CUSHION, tableUpperLeft.y - HALF_WIDTH_CUSHION
+    )
+    drawer.lineSegment(
+        tableUpperLeft.x - WIDTH_CUSHION, tableUpperLeft.y + TABLE_SIZE.y + HALF_WIDTH_CUSHION,
+        tableUpperLeft.x + TABLE_SIZE.x + WIDTH_CUSHION, tableUpperLeft.y + TABLE_SIZE.y + HALF_WIDTH_CUSHION
+    )
+    drawer.lineSegment(
+        tableUpperLeft.x - HALF_WIDTH_CUSHION, tableUpperLeft.y - WIDTH_CUSHION,
+        tableUpperLeft.x + -HALF_WIDTH_CUSHION, tableUpperLeft.y + TABLE_SIZE.y + WIDTH_CUSHION
+    )
+    drawer.lineSegment(
+        tableUpperLeft.x + TABLE_SIZE.x + HALF_WIDTH_CUSHION, tableUpperLeft.y - WIDTH_CUSHION,
+        tableUpperLeft.x + TABLE_SIZE.x + HALF_WIDTH_CUSHION, tableUpperLeft.y + TABLE_SIZE.y + WIDTH_CUSHION
+    )
 }
 
 private fun Program.drawPockets(tableUpperLeft: Vector2, pockets: Pockets) {
@@ -609,43 +656,42 @@ private fun Program.drawPockets(tableUpperLeft: Vector2, pockets: Pockets) {
     drawCushion(tableUpperLeft)
     drawer.stroke = ColorRGBa.GREEN_YELLOW
     drawer.strokeWeight = 2.0
-    for (i in pockets.lines.indices){
+    for (i in pockets.lines.indices) {
         drawPocketLine(pockets.lines[i], tableUpperLeft)
     }
     drawer.stroke = ColorRGBa.LIGHT_BLUE
     drawer.strokeWeight = 1.0
     drawer.fill = ColorRGBa.LIGHT_BLUE
-    for (i in pockets.circles.indices){
+    for (i in pockets.circles.indices) {
         drawPocketCircle(pockets.circles[i], tableUpperLeft)
     }
-  /*   drawPocketLine(pockets.leftSidePocketLine, tableUpperLeft)
-    drawPocketLine(pockets.rightSidePocketLine, tableUpperLeft)
-    drawPocketLine(pockets.footLeftCornerPocketFootLine, tableUpperLeft)
-    drawPocketLine(pockets.footLeftCornerPocketSideLine, tableUpperLeft)
-    drawPocketLine(pockets.headLeftCornerPocketHeadLine, tableUpperLeft)
-    drawPocketLine(pockets.headLeftCornerPocketSideLine, tableUpperLeft)
-    drawPocketLine(pockets.headRightCornerPocketSideLine, tableUpperLeft)
-    drawPocketLine(pockets.headRightCornerPocketHeadLine, tableUpperLeft)
-    drawPocketLine(pockets.footRightCornerPocketFootLine, tableUpperLeft)
-    drawPocketLine(pockets.footRightCornerPocketSideLine, tableUpperLeft)
+    /*   drawPocketLine(pockets.leftSidePocketLine, tableUpperLeft)
+      drawPocketLine(pockets.rightSidePocketLine, tableUpperLeft)
+      drawPocketLine(pockets.footLeftCornerPocketFootLine, tableUpperLeft)
+      drawPocketLine(pockets.footLeftCornerPocketSideLine, tableUpperLeft)
+      drawPocketLine(pockets.headLeftCornerPocketHeadLine, tableUpperLeft)
+      drawPocketLine(pockets.headLeftCornerPocketSideLine, tableUpperLeft)
+      drawPocketLine(pockets.headRightCornerPocketSideLine, tableUpperLeft)
+      drawPocketLine(pockets.headRightCornerPocketHeadLine, tableUpperLeft)
+      drawPocketLine(pockets.footRightCornerPocketFootLine, tableUpperLeft)
+      drawPocketLine(pockets.footRightCornerPocketSideLine, tableUpperLeft)
 
-   */
+     */
 }
-fun yourTurnLabel(your_turn: Boolean ) : String
-{
-    val yourTurnLabel =     "Turn:     Yours"
+
+fun yourTurnLabel(your_turn: Boolean): String {
+    val yourTurnLabel = "Turn:     Yours"
     val opponentTurnLabel = "Turn: Opponents"
-    if (your_turn){
+    if (your_turn) {
         return yourTurnLabel
-    }
-    else
+    } else
         return opponentTurnLabel
 }
 
 
 fun Program.drawPocketCircle(circle: Circle, tableUpperLeft: Vector2) {
     drawer.fill = ColorRGBa.DARK_GREEN
-   drawer.circle(tableUpperLeft.x + circle.x, tableUpperLeft.y + circle.y, circle.radius)
+    drawer.circle(tableUpperLeft.x + circle.x, tableUpperLeft.y + circle.y, circle.radius)
 
 }
 
@@ -665,8 +711,7 @@ private fun Program.drawBall(
         drawer.strokeWeight = 1.0
         drawer.stroke = ColorRGBa.BLACK
         drawer.circle(positionV2, radius)
-    }
-    else {
+    } else {
         drawer.fill = ColorRGBa.WHITE
         drawer.strokeWeight = 1.0
         drawer.stroke = ColorRGBa.BLACK
@@ -675,12 +720,12 @@ private fun Program.drawBall(
         drawer.strokeWeight = radius - 2.0
         val offset = radius - 2.0
         val startPosition = Vector2(positionV2.x - offset, positionV2.y)
-        val endPosition = Vector2(positionV2.x + offset, positionV2.y )
-        drawer.lineSegment(startPosition, endPosition  )
+        val endPosition = Vector2(positionV2.x + offset, positionV2.y)
+        drawer.lineSegment(startPosition, endPosition)
     }
 }
 
- fun initialBalls(): Array<Ball> {
+fun initialBalls(): Array<Ball> {
     return arrayOf(
         Ball(0, Position(160.0, 200.0), Velocity(0.0, 0.0), true),
         Ball(1, Position(200.0, 300.0), Velocity(0.0, 0.0), true),
@@ -699,4 +744,18 @@ private fun Program.drawBall(
         Ball(14, Position(400.0, 344.0), Velocity(0.0, 0.0), true),
         Ball(15, Position(400.0, 366.0), Velocity(0.0, 0.0), true),
     )
+}
+
+fun copyBalls(inValue: Array<Ball>): Array<Ball> {
+    var balls = initialBalls()
+    for (i in 0 until inValue.size)
+    {
+       val inBall = inValue[i]
+        balls[i].position = Position(inBall.position.x, inBall.position.y)
+        balls[i].velocity = Velocity(inBall.velocity.x, inBall.velocity.y)
+        balls[i].active = inBall.active
+        if (balls[i].symbol != i)
+            println("Symbol on copy is wrong ")
+    }
+    return balls
 }
