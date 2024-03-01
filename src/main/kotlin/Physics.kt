@@ -17,6 +17,9 @@ fun moveBalls(
 //            " displayIncremenat "  + displayIncrement.toString())
 //    print ("Velocity " + balls[0].velocity.x + " " + balls[0].velocity.y)
 //        print("\n")
+    val (initialEnergy, initialMomentum) = computeEnergyMomentum(balls)
+    var previousEnergy = initialEnergy
+    var previousMomentum = initialMomentum
     val displayIncrementToUse = displayIncrement
     for (loop in 0 until displayIncrementToUse) {
         // Compute the new position of the pool ball
@@ -26,7 +29,13 @@ fun moveBalls(
             ball.velocity =
                 checkCushion(balls[index].position, ball.velocity, tableSize, cushionElasticity, pockets)
         }
+        val (currentEnergy2, currentMomentum2) = computeEnergyMomentum(balls)
+        checkForIncrease(currentEnergy2, previousEnergy, currentMomentum2, previousMomentum,"a")
         computeCollisions(balls, restitution)
+        val (currentEnergy1, currentMomentum1) = computeEnergyMomentum(balls)
+        checkForIncrease(currentEnergy1, previousEnergy, currentMomentum1, previousMomentum,"after collisions")
+
+
         for (index in balls.indices) {
             val ball = balls[index]
             if (!ball.active) continue
@@ -34,7 +43,30 @@ fun moveBalls(
             ball.position = updatePosition(ball.position, ball.velocity, segments, deltaTime)
             checkInPocket(ball)
         }
+        val (currentEnergy, currentMomentum) = computeEnergyMomentum(balls)
+        checkForIncrease(currentEnergy, previousEnergy, currentMomentum, previousMomentum,"c")
+        previousEnergy = currentEnergy
+        previousMomentum = currentMomentum
+
+
     }
+}
+
+private fun checkForIncrease (
+    currentEnergy: Double,
+    previousEnergy: Double,
+    currentMomentum: Double,
+    previousMomentum: Double,
+    symbol: String) : Boolean{
+    if (currentEnergy -.001 > previousEnergy ) {
+        println("Energy  increasing ******* $currentEnergy from $previousEnergy  in move balls at $symbol")
+        return true;
+    }
+    if (currentMomentum -.001 > previousMomentum) {
+        println(" Momentum increasing ******* $ $currentMomentum from $previousMomentum in move balls at $symbol")
+        return true;
+    }
+    return false
 }
 
 fun computeCollisions(balls: Array<Ball>, restitution: Double) {
@@ -48,13 +80,23 @@ fun computeCollisions(balls: Array<Ball>, restitution: Double) {
             if (!secondBall.active) continue
             if (collided[second]) continue
             if (colliding(firstBall.position, secondBall.position)) {
+                val startMomentum = computeTotalMomentum(firstBall.velocity, secondBall.velocity)
                 val velocities: TwoVelocities = computeCollisionVelocity(
                     firstBall.position,
                     firstBall.velocity, secondBall.position, secondBall.velocity,
                     restitution
                 )
-                firstBall.velocity = velocities.velocity1
-                secondBall.velocity = velocities.velocity2
+                val endMomentum = computeTotalMomentum(velocities.velocity1, velocities.velocity2)
+                if (endMomentum > startMomentum) {
+                      println("***** Ball momentum increasing $first $second ")
+                    printBall(firstBall)
+                    printBall(secondBall)
+                    println("End momentum $endMomentum from $startMomentum")
+                    println("End velocity  $velocities.velocity1,  $velocities.velocity2")
+                    checkMomentum(firstBall.velocity, secondBall.velocity, velocities.velocity1, velocities.velocity2)
+                }
+                balls[first].velocity = velocities.velocity1
+                balls[second].velocity = velocities.velocity2
                 collided[first] = true
                 collided[second] = true
             }
@@ -76,7 +118,7 @@ fun checkInPocket(ball: Ball) {
 @Suppress("BooleanMethodIsAlwaysInverted")
 fun colliding(position1: Position, position2: Position): Boolean {
     val distance = computeDistanceSquared(position1, position2)
-    return distance <= BALL_DIAMETER_SQUARED
+    return distance <= BALL_DIAMETER_SQUARED + BALL_RADIUS * .01
 }
 
 
@@ -85,6 +127,28 @@ fun computeCollisionVelocity(
     position2: Position, velocity2: Velocity, restitution: Double
 ):
         TwoVelocities {
+
+//    val COR = restitution
+//
+//    // Calculate relative position and velocity
+//    val dx = position2.x - position1.x
+//    val dy = position2.y - position1.y
+//    val distance = Math.sqrt(dx * dx + dy * dy)
+//
+//    val relativeVx = velocity2.x - velocity1.x
+//    val relativeVy = velocity2.y - velocity1.y
+//
+//    // Calculate the normal component of relative velocity
+//    val normalV = (dx * relativeVx + dy * relativeVy) / distance
+//
+//    // Update velocities after collision
+//    val newVxA = velocity1.x + (normalV * dx / distance) * COR
+//    val newVyA = velocity1.y + (normalV * dy / distance) * COR
+//    val newVxB = velocity2.x - (normalV * dx / distance) * COR
+//    val newVyB = velocity2.y - (normalV * dy / distance) * COR
+//
+//    return TwoVelocities(Velocity(newVxA, newVxB), Velocity(newVxB, newVyB))
+//}
     // Adopted from https://www.plasmaphysics.org.uk/programs/coll2d_cpp.htm
     // That was a C program.
     val m1 = 1.0
@@ -109,9 +173,9 @@ fun computeCollisionVelocity(
 
     val checkColliding = (vx21 * x21 + vy21 * y21)
     if (checkColliding >= 0) {
-        if (checkColliding > 0) {
-//            print("Not colliding " + checkColliding.toString())
-        }
+
+            print("Not colliding " + checkColliding.toString())
+
         return TwoVelocities(velocity1, velocity2)
     }
 //     *** I have inserted the following statements to avoid a zero divide;
@@ -119,7 +183,10 @@ fun computeCollisionVelocity(
 //          1.0E-12 should be replaced by a larger value). **************
 
     val fy21 = 1.0E-12 * abs(y21)
-    if (abs(x21) < fy21) x21 = fy21 * getSign(x21)
+    if (abs(x21) < fy21) {
+        println("Setting too small value $x21 $fy21 $y21")
+        x21 = fy21 * getSign(x21)
+     }
 //     ***  update velocities ***
     val a = y21 / x21
     val dvx2 = -2 * (vx21 + a * vy21) / ((1 + a * a) * (1 + m21))
@@ -127,13 +194,17 @@ fun computeCollisionVelocity(
     vy2 = vy2 + a * dvx2
     vx1 = vx1 - m21 * dvx2
     vy1 = vy1 - a * m21 * dvx2
-//     ***  velocity correction for inelastic collisions ***
+
+    checkMomentum(velocity1, velocity2, Velocity(vx1, vy1), Velocity(vx2, vy2))
+    //     ***  velocity correction for inelastic collisions ***
     vx1 = (vx1 - vx_cm) * restitution + vx_cm
     vy1 = (vy1 - vy_cm) * restitution + vy_cm
     vx2 = (vx2 - vx_cm) * restitution + vx_cm
     vy2 = (vy2 - vy_cm) * restitution + vy_cm
+    checkMomentum(velocity1, velocity2, Velocity(vx1, vy1), Velocity(vx2, vy2))
+
     return TwoVelocities(Velocity(vx1, vy1), Velocity(vx2, vy2))
-}
+ }
 
 private fun getSign(x21: Double): Double {
     val sign = if (x21 < 0.0) {

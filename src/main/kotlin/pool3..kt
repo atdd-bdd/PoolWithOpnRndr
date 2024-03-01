@@ -66,6 +66,10 @@ fun main() = application {
         width = 1200
         height = 750
         title = "Pool"
+        minimumHeight = 700
+        minimumWidth = 1200
+        windowResizable = false
+
     }
     program {
         var messageIn = Message()
@@ -374,7 +378,10 @@ fun main() = application {
 //                    print("*************************Possible segments $segmentsPossibly\n")
                 computationSegments = 100
                 previousBalls = copyBalls(balls)
+
                 hitCue(balls, startingVelocity)
+                checkMomentum(previousBalls[0].velocity, previousBalls[1].velocity,
+                    balls[0].velocity, balls[1].velocity )
             }
             if (moving) {
                 startMoving = false
@@ -392,7 +399,7 @@ fun main() = application {
                 val time = program.seconds
                 totalMoveTime += deltaTime
                 //println("Delta time $deltaTime move $moveCount total $totalMoveTime")
-                println("$deltaTime,")
+//                println("$deltaTime,")
                 moveCount++
 
                 if (stoppedMoving(balls)) {
