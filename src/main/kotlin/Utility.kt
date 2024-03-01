@@ -1,12 +1,18 @@
+import kotlin.math.abs
+import kotlin.math.sign
 import kotlin.math.sqrt
 
 fun computeEnergyMomentum(balls: Array<Ball>): Pair<Double, Double> {
     var totalEnergy = 0.0
     var totalMomentum = 0.0
+    var momentumX = 0.0
+    var momentumY = 0.0
     for (ball in balls){
         totalEnergy += computeEnergy(ball.velocity)
-        totalMomentum += computeMomentum(ball.velocity)
-    }
+        momentumX += ball.velocity.x
+        momentumY += ball.velocity.y
+     }
+    totalMomentum = sqrt(momentumX*momentumX + momentumY*momentumY)
     return Pair(totalEnergy, totalMomentum )
 
 }
@@ -19,7 +25,12 @@ fun computeEnergyMomentum(balls: Array<Ball>): Pair<Double, Double> {
  }
 
  fun computeTotalMomentum(velocity1: Velocity, velocity2: Velocity): Double {
-     return computeMomentum(velocity1) + computeMomentum(velocity2)
+     var momentumX = 0.0
+     var momentumY = 0.0
+     momentumX =velocity1.x + velocity2.x
+     momentumY = velocity1.y + velocity2.y
+     val totalMomentum = sqrt(momentumX*momentumX + momentumY*momentumY)
+     return totalMomentum
  }
 
  fun computeTotalMomentumTV(velocities: TwoVelocities): Double {
@@ -44,4 +55,24 @@ fun checkMomentum(velocity1: Velocity, velocity2: Velocity, velocity11: Velocity
         println("**** X Momentum increased $xEnd from $xStart ")
     if (yEnd - .0001 > yStart)
         println("***Y Momentum increased $yEnd from $yStart")
+}
+
+fun printBallsDifference(previousBalls: Array<Ball>, currentBalls: Array<Ball>){
+    println("Ball differences ")
+  //  println("Previous " + getGameString())
+    for (i in 0 until previousBalls.size)
+    {
+        val balls1 = previousBalls[i]
+        val balls2 = currentBalls[i]
+        val ball1x = balls1.velocity.x
+        val ball2x = balls2.velocity.x
+        if ((abs(ball1x) -1.0 > abs(ball2x)) ||
+                abs(ball2x) -1.0 > abs(ball1x) || sign(ball1x) != sign(ball2x))
+            println(" For $i  X Velocity $ball1x != $ball2x ")
+        val ball1y = balls1.velocity.y
+        val ball2y = balls2.velocity.y
+        if ((abs(ball1y) -1.0 > abs(ball2y)) ||
+            abs(ball2y) -1.0 > abs(ball1y) || sign(ball1y) != sign(ball2y))
+            println(" For $i Y Velocity $ball1y != $ball2y ")
+    }
 }

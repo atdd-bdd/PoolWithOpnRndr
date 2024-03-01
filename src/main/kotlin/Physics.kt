@@ -17,12 +17,16 @@ fun moveBalls(
 //            " displayIncremenat "  + displayIncrement.toString())
 //    print ("Velocity " + balls[0].velocity.x + " " + balls[0].velocity.y)
 //        print("\n")
-    val (initialEnergy, initialMomentum) = computeEnergyMomentum(balls)
-    var previousEnergy = initialEnergy
-    var previousMomentum = initialMomentum
+//    val (initialEnergy, initialMomentum) = computeEnergyMomentum(balls)
+//    val previousBalls = copyBalls(balls)
     val displayIncrementToUse = displayIncrement
     for (loop in 0 until displayIncrementToUse) {
         // Compute the new position of the pool ball
+        val (initialEnergy, initialMomentum) = computeEnergyMomentum(balls)
+        val previousBalls = copyBalls(balls)
+        var previousEnergy = initialEnergy
+        var previousMomentum = initialMomentum
+
         for (index in balls.indices) {
             val ball = balls[index]
             if (!ball.active) continue
@@ -30,11 +34,13 @@ fun moveBalls(
                 checkCushion(balls[index].position, ball.velocity, tableSize, cushionElasticity, pockets)
         }
         val (currentEnergy2, currentMomentum2) = computeEnergyMomentum(balls)
-        checkForIncrease(currentEnergy2, previousEnergy, currentMomentum2, previousMomentum,"a")
+        if (checkForIncrease(currentEnergy2, previousEnergy, currentMomentum2, previousMomentum,"after cushions")) {
+            printBallsDifference(previousBalls, balls)
+        }
         computeCollisions(balls, restitution)
-        val (currentEnergy1, currentMomentum1) = computeEnergyMomentum(balls)
-        checkForIncrease(currentEnergy1, previousEnergy, currentMomentum1, previousMomentum,"after collisions")
 
+        val (currentEnergy1, currentMomentum1) = computeEnergyMomentum(balls)
+        checkForIncrease(currentEnergy1, currentEnergy2, currentMomentum1, currentMomentum2,"after collisions")
 
         for (index in balls.indices) {
             val ball = balls[index]
@@ -44,7 +50,7 @@ fun moveBalls(
             checkInPocket(ball)
         }
         val (currentEnergy, currentMomentum) = computeEnergyMomentum(balls)
-        checkForIncrease(currentEnergy, previousEnergy, currentMomentum, previousMomentum,"c")
+        checkForIncrease(currentEnergy, currentEnergy1, currentMomentum, currentMomentum1," after pockets")
         previousEnergy = currentEnergy
         previousMomentum = currentMomentum
 
@@ -58,11 +64,11 @@ private fun checkForIncrease (
     currentMomentum: Double,
     previousMomentum: Double,
     symbol: String) : Boolean{
-    if (currentEnergy -.001 > previousEnergy ) {
+    if (currentEnergy -.01 > previousEnergy ) {
         println("Energy  increasing ******* $currentEnergy from $previousEnergy  in move balls at $symbol")
         return true;
     }
-    if (currentMomentum -.001 > previousMomentum) {
+    if (currentMomentum -.01 > previousMomentum) {
         println(" Momentum increasing ******* $ $currentMomentum from $previousMomentum in move balls at $symbol")
         return true;
     }
@@ -87,7 +93,7 @@ fun computeCollisions(balls: Array<Ball>, restitution: Double) {
                     restitution
                 )
                 val endMomentum = computeTotalMomentum(velocities.velocity1, velocities.velocity2)
-                if (endMomentum > startMomentum) {
+                if (endMomentum - .01 > startMomentum) {
                       println("***** Ball momentum increasing $first $second ")
                     printBall(firstBall)
                     printBall(secondBall)
