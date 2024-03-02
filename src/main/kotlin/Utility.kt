@@ -1,3 +1,4 @@
+import java.io.File
 import kotlin.math.abs
 import kotlin.math.sign
 import kotlin.math.sqrt
@@ -75,4 +76,16 @@ fun printBallsDifference(previousBalls: Array<Ball>, currentBalls: Array<Ball>){
             abs(ball2y) -1.0 > abs(ball1y) || sign(ball1y) != sign(ball2y))
             println(" For $i Y Velocity $ball1y != $ball2y ")
     }
+}
+
+fun turnResourceIntoFile(fileName: String):String{
+    val stream =object {}.javaClass.getResourceAsStream(fileName)
+    val outfile = "temp.otf"
+    val file = File(outfile)
+    val bytes = stream?.readBytes()
+    if (bytes != null)
+        file.writeBytes(bytes)
+    else
+        println("Resource $fileName not found")
+    return outfile
 }

@@ -1,7 +1,7 @@
 import org.openrndr.math.Vector2
 
-const val SIDE_POCKET_LENGTH = 5 * BALL_RADIUS
-const val CORNER_POCKET_LENGTH = 4 * BALL_RADIUS
+const val SIDE_POCKET_LENGTH = 6 * BALL_RADIUS
+const val CORNER_POCKET_LENGTH = 3 * BALL_RADIUS
 const val CIRCLE_OFFSET = BALL_RADIUS / 2
 
 class Circle(val x: Double, val y: Double, val radius: Double)
@@ -32,7 +32,7 @@ class HeadRightCornerPocket {
     }
 }
 
-//   Complete the two below
+
 class FootLeftCornerPocket {
     val sideLine = LineSegment(Vector2(TABLE_SIZE.x - CORNER_POCKET_LENGTH, 0.0), Vector2(TABLE_SIZE.x, 0.0))
     val footLine = LineSegment(Vector2(TABLE_SIZE.x, 0.0), Vector2(TABLE_SIZE.x, CORNER_POCKET_LENGTH))
@@ -64,7 +64,7 @@ class FootRightCornerPocket {
 
 class LeftSidePocket {
     val center = TABLE_SIZE.x / 2
-    val half_width = CORNER_POCKET_LENGTH / 2
+    val half_width = SIDE_POCKET_LENGTH / 2
     val sideLine = LineSegment(
         Vector2(center - half_width, 0.0),
         Vector2(center + half_width, 0.0)
@@ -80,7 +80,7 @@ class LeftSidePocket {
 
 class RightSidePocket {
     val center = TABLE_SIZE.x / 2
-    val half_width = CORNER_POCKET_LENGTH / 2
+    val half_width = SIDE_POCKET_LENGTH / 2
     val sideLine = LineSegment(
         Vector2(center - half_width, TABLE_SIZE.y),
         Vector2(center + half_width, TABLE_SIZE.y)
@@ -128,6 +128,7 @@ class Pockets {
         cushionElasticity: Double,
     ): Velocity {
         if (atLeftSideRail(position, velocity)) {
+//            println("Left Side Rail $position $velocity")
             if (headLeftCornerPocket.headedTowardSide(position, velocity) ||
                 footLeftCornerPocket.headedTowardSide(position, velocity) ||
                 leftSidePocket.headedTowardSide(position, velocity)
@@ -137,6 +138,7 @@ class Pockets {
                 return reboundSideRail(velocity, cushionElasticity)
         }
         if (atRightSideRail(position, velocity)) {
+//            println("Right Side Rail $position $velocity")
             if (headRightCornerPocket.headedTowardSide(position, velocity)
                 || footRightCornerPocket.headedTowardSide(position, velocity)
                 || rightSidePocket.headedTowardSide(position, velocity)
@@ -145,6 +147,7 @@ class Pockets {
         }
 // kotlin style guideline for multi-line predicate
         if (atHeadRail(position, velocity)) {
+//            println("At Head Rail $position $velocity")
             if (headLeftCornerPocket.headedTowardHead(position, velocity) ||
                 headRightCornerPocket.headedTowardHead(position, velocity)
             ) {
@@ -152,17 +155,28 @@ class Pockets {
             } else
                 return reboundHeadFootRail(velocity, cushionElasticity)
         }
-// Alternative way - using a method to hold predicate, and the return if
         if (atFootRail(position, velocity)) {
-            return if (headingFootPocket(position, velocity)) velocity
-            else reboundHeadFootRail(velocity, cushionElasticity)
+//            println("At Foot Rail $position $velocity")
+            if (footLeftCornerPocket.headedTowardFoot(position, velocity) ||
+                footRightCornerPocket.headedTowardFoot(position, velocity)
+            ) {
+                return velocity
+            } else
+                return reboundHeadFootRail(velocity, cushionElasticity)
         }
-        return velocity
+// Alternative way - using a method to hold predicate, and the return if
+//        if (atFootRail(position, velocity)) {
+//            println("At foot Rail")
+//            return if (headingFootPocket(position, velocity)) velocity
+//            else reboundHeadFootRail(velocity, cushionElasticity)
+//        }
+//        return velocity
+    return velocity
     }
 
-    private fun headingFootPocket(position: Position, velocity: Velocity) =
-        footLeftCornerPocket.headedTowardFoot(position, velocity) ||
-                footRightCornerPocket.headedTowardFoot(position, velocity)
+//    private fun headingFootPocket(position: Position, velocity: Velocity) =
+//        footLeftCornerPocket.headedTowardFoot(position, velocity) ||
+//                footRightCornerPocket.headedTowardFoot(position, velocity)
 
 
     private fun atLeftSideRail(position: Position, velocity: Velocity): Boolean {

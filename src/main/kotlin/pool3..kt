@@ -30,7 +30,7 @@ fun main() = application {
     val client = HttpClient {
         install(WebSockets)
     }
-
+    val fontFileName = turnResourceIntoFile("/data/fonts/default.otf")
     val MINIMUM_RESISTANCE = 0.0
     val MAXIMUM_RESISTANCE = 0.05
     val MAXIMUM_CUSHION_ELASTICITY = 1.0
@@ -82,6 +82,8 @@ fun main() = application {
         var ballMoving = MOUSE_NOT_ON_BALL
         var startPosition = Position(0.0, 0.0)
         val pockets = Pockets()
+        var errorMessage =""
+        var statusMessage =""
         mouse.buttonDown.listen {
             //print( it.position.toString() + "\n")
             val currentPosition = mouseToPosition(it, tableUpperLeft)
@@ -314,7 +316,7 @@ fun main() = application {
         }
 
         extend {
-            val deltaTime = this.seconds - previousTime
+            var deltaTime = this.seconds - previousTime
             // val timesPerSecond = 1.0 / deltaTime
             // print("Delta Time is $deltaTime per second $timesPerSecond \n" )
             previousTime = this.seconds
@@ -342,10 +344,13 @@ fun main() = application {
                 val inputText = communication(client, messageOut.toString())
 
                 val goodMessage = messageIn.fromString(inputText)
+                errorMessage = "All OK"
                 if (goodMessage) {
                     your_turn = ! messageIn.header.yourTurn
                     opponentMessage = messageIn.header.opponentMessage
                 }
+                else
+                    errorMessage = "Not connected"
                 if (!your_turn && goodMessage && previousMessageDateStamp !=
                     messageIn.header.dateStamp
                 ) {
@@ -369,7 +374,7 @@ fun main() = application {
             }
             drawTable(tableUpperLeft, TABLE_SIZE, pockets)
             drawBalls(balls, colors, stripes, tableUpperLeft)
-            drawChat(your_turn, opponentMessage)
+            drawChat(your_turn, opponentMessage, fontFileName, errorMessage, statusMessage)
             if (startMoving) {
                 moveCount = 0
                 totalMoveTime = 0.0
@@ -383,7 +388,10 @@ fun main() = application {
                 checkMomentum(previousBalls[0].velocity, previousBalls[1].velocity,
                     balls[0].velocity, balls[1].velocity )
             }
+            statusMessage = "Not moving"
             if (moving) {
+                statusMessage = "Moving"
+                deltaTime = .015    // ******************************  take out maybe******
                 startMoving = false
                 moveBalls(
                     balls,
@@ -610,13 +618,19 @@ private fun Program.drawTable(tableUpperLeft: Vector2, tableSize: Vector2, pocke
     drawPockets(tableUpperLeft, pockets)
 }
 
-fun Program.drawChat(your_turn: Boolean, opponentMessage: String) {
+fun Program.drawChat(
+    your_turn: Boolean,
+    opponentMessage: String,
+    fontFileName: String,
+    errorMessage: String,
+    statusMessage: String
+) {
     drawer.fill = ColorRGBa.GRAY
     drawer.stroke = ColorRGBa.GRAY
     drawer.strokeWeight = 2.0
     var box1 = Rectangle(0.0, 500.0, 200.0, 200.0)
     drawer.rectangle(box1)
-    val font = loadFont("data/fonts/default.otf", 24.0)
+    val font = loadFont(fontFileName, 24.0)
     drawer.fontMap = font
     drawer.fill = ColorRGBa.PINK
     writer {
@@ -624,13 +638,17 @@ fun Program.drawChat(your_turn: Boolean, opponentMessage: String) {
         newLine()
         text(yourTurnLabel(your_turn))
     }
-    val font1 = loadFont("data/fonts/default.otf", 18.0)
+    val font1 = loadFont(fontFileName, 18.0)
     drawer.fontMap = font1
     drawer.fill = ColorRGBa.PINK
     writer {
         box = Rectangle(10.0, 600.0, 180.0, 200.0)
         newLine()
         text(opponentMessage)
+        newLine()
+        text(statusMessage)
+        newLine()
+        text(errorMessage)
     }
 }
 
