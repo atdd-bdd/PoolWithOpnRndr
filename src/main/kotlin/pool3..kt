@@ -104,6 +104,7 @@ fun main() = application {
                 mouseToPosition(it, tableUpperLeft)
         }
         extend(ControlManager()) {
+
             layout {
 
                 backgroundColor = ColorRGBa.WHITE
@@ -264,6 +265,7 @@ fun main() = application {
                         style = styleSheet {
                             width = 180.px
                         }
+
                         label = "Display Speed"
                         value = configuration.displayIncrement.toDouble()
                         range = Range(1.0, computationSegments.toDouble())
