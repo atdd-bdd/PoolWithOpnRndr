@@ -1,3 +1,4 @@
+// Notes on the collision detector
     R    (restitution coefficient)  between 0 and 1 (1=perfectly elastic collision)
 //    m1   (mass of ball 1)
 //    m2   (mass of ball 2)
@@ -26,7 +27,7 @@
 //   This program is free to use for everybody. However, you use it at your own
 //   risk and I do not accept any liability resulting from incorrect behaviour.
 //   I have tested the program for numerous cases and I could not see anything
-//   wrong with it but I can not guarantee that it is bug-free under any
+//   wrong with it. but I can not guarantee that it is bug-free under any
 //   circumstances.
 //
 //   I would appreciate if you could report any problems to me

@@ -9,10 +9,11 @@ class Header {
     var dateStamp = 0.0
     var version = "V1.0"
     fun toStringList(): List<String> {
-        val ret = listOf(opponentID, yourID, yourMessage, "NOT NEEDED", startMoving.toString(),
-            yourTurn.toString(), version, dateStamp.toString())
-        return ret
-        }
+        return listOf(
+            opponentID, yourID, yourMessage, "NOT NEEDED", startMoving.toString(),
+            yourTurn.toString(), version, dateStamp.toString()
+        )
+    }
         fun fromStringList(lines : List<String>): List<String> {
             if (lines.size < 8) {
                 Debug.println("Not long enough for header on input ")

@@ -1,3 +1,5 @@
+@file:Suppress("LocalVariableName")
+
 import org.openrndr.math.Vector2
 import kotlin.math.*
 
@@ -19,12 +21,11 @@ fun moveBalls(
 //        print("\n")
 //    val (initialEnergy, initialMomentum) = computeEnergyMomentum(balls)
 //    val previousBalls = copyBalls(balls)
-    val displayIncrementToUse = displayIncrement
     val (initialEnergy, initialMomentum) = computeEnergyMomentum(balls)
     val previousBalls = copyBalls(balls)
     var previousEnergy = initialEnergy
     var previousMomentum = initialMomentum
-    for (loop in 0 until displayIncrementToUse) {
+    for (loop in 0 until displayIncrement) {
         // Compute the new position of the pool ball
 
         for (index in balls.indices) {
@@ -113,9 +114,10 @@ fun computeCollisions(balls: Array<Ball>, restitution: Double) {
 
 
 fun checkInPocket(ball: Ball) {
-    if (ball.position.x < 0.0 - BALL_RADIUS || ball.position.x > TABLE_SIZE.x + BALL_RADIUS)
+    val ALMOST_BALL_RADIUS = BALL_RADIUS -.1
+    if (ball.position.x <= 0.0 - ALMOST_BALL_RADIUS || ball.position.x >= TABLE_SIZE.x + ALMOST_BALL_RADIUS)
         ball.active = false
-    if (ball.position.y < 0.0 - BALL_RADIUS || ball.position.y > TABLE_SIZE.y + BALL_RADIUS)
+    if (ball.position.y <= 0.0 - ALMOST_BALL_RADIUS || ball.position.y >= TABLE_SIZE.y + ALMOST_BALL_RADIUS)
         ball.active = false
     if (!ball.active)
         ball.velocity = Velocity(0.0, 0.0)
@@ -243,16 +245,16 @@ fun checkCushion(
 
      */
 }
-
-private fun atRightSide(position: Position, tableSize: Vector2, velocityY: Double) =
-    ((position.y >= tableSize.y - BALL_RADIUS) && velocityY > 0)
-
-private fun atLeftSide(position: Position, velocityY: Double) = ((position.y <= 0.0 + BALL_RADIUS) && velocityY < 0)
-
-private fun atFoot(position: Position, tableSize: Vector2, velocityX: Double) =
-    ((position.x >= tableSize.x - BALL_RADIUS) && velocityX > 0)
-
-private fun atHead(position: Position, velocityX: Double) = ((position.x <= 0.0 + BALL_RADIUS) && velocityX < 0)
+//  This was how it was done previously
+//private fun atRightSide(position: Position, tableSize: Vector2, velocityY: Double) =
+//    ((position.y >= tableSize.y - BALL_RADIUS) && velocityY > 0)
+//
+//private fun atLeftSide(position: Position, velocityY: Double) = ((position.y <= 0.0 + BALL_RADIUS) && velocityY < 0)
+//
+//private fun atFoot(position: Position, tableSize: Vector2, velocityX: Double) =
+//    ((position.x >= tableSize.x - BALL_RADIUS) && velocityX > 0)
+//
+//private fun atHead(position: Position, velocityX: Double) = ((position.x <= 0.0 + BALL_RADIUS) && velocityX < 0)
 
 private fun checkForNotApproachingSidePockets(position: Position, pockets: Pockets, tableSize: Vector2): Boolean {
     var notInPocket = true
@@ -327,16 +329,16 @@ fun checkForDropLocation(
     balls: Array<Ball>
 ): Position {
     var endPosition = endMousePosition
-    val numberSegementsToCompute = 1000
-    val deltaX = (endPosition.x - startPosition.x) / numberSegementsToCompute
-    val deltaY = (endPosition.y - startPosition.y) / numberSegementsToCompute
+    val numberSegmentsToCompute = 1000
+    val deltaX = (endPosition.x - startPosition.x) / numberSegmentsToCompute
+    val deltaY = (endPosition.y - startPosition.y) / numberSegmentsToCompute
     var moved = true
     var numberTimesToCheckForOverlap = 15
     while (moved && numberTimesToCheckForOverlap-- > 0) {
         moved = false
         for (index in balls.indices) {
             if (index == whichBall) continue
-            for (number in 0..numberSegementsToCompute) {
+            for (number in 0..numberSegmentsToCompute) {
                 if (colliding(endPosition, balls[index].position)) {
                     endPosition = Position(endPosition.x - deltaX, endPosition.y - deltaY)
                     moved = true
@@ -353,7 +355,7 @@ fun rackBalls(balls: Array<Ball>) {
     val diameter = BALL_RADIUS * 2
     val rowDistance = Math.sqrt(diameter * diameter - BALL_RADIUS * BALL_RADIUS)
     val cueBallPosition = (Position(TABLE_SIZE.x / 4, TABLE_SIZE.y / 2))
-    val positions = arrayOf<Position>(
+    val positions = arrayOf(
         Position(0.0, 0.0),
 
         Position(rowDistance, BALL_RADIUS),

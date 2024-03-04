@@ -19,13 +19,14 @@ class Configuration
         out.cueAngleTrim = cueAngleTrim
         return out
     }
-   fun toStringList(): List<String> {
-       val ret = listOf(cueAngle.toString(), cueForce.toString(), rollingResistance.toString(),
-           restitution.toString(), cushionElasticity.toString(), displayIncrement.toString(),
-           cueAngleTrim.toString())
-       return ret
+    fun toStringList(): List<String> {
+        return listOf(
+            cueAngle.toString(), cueForce.toString(), rollingResistance.toString(),
+            restitution.toString(), cushionElasticity.toString(), displayIncrement.toString(),
+            cueAngleTrim.toString()
+        )
 
-   }
+    }
     fun fromStringList(lines: List<String>) : List<String> {
         if (lines.size < 7)
             return listOf("")

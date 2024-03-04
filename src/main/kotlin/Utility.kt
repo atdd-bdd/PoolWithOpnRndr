@@ -24,12 +24,11 @@ fun computeEnergyMomentum(balls: Array<Ball>): Pair<Double, Double> {
      return computeEnergy(velocity1) + computeEnergy(velocity2)
  }
 
- fun computeTotalMomentum(velocity1: Velocity, velocity2: Velocity): Double {
-     val momentumX =velocity1.x + velocity2.x
-     val momentumY = velocity1.y + velocity2.y
-     val totalMomentum = sqrt(momentumX*momentumX + momentumY*momentumY)
-     return totalMomentum
- }
+fun computeTotalMomentum(velocity1: Velocity, velocity2: Velocity): Double {
+    val momentumX = velocity1.x + velocity2.x
+    val momentumY = velocity1.y + velocity2.y
+    return sqrt(momentumX * momentumX + momentumY * momentumY)
+}
 
  fun computeTotalMomentumTV(velocities: TwoVelocities): Double {
      return computeTotalMomentum(velocities.velocity1, velocities.velocity2)

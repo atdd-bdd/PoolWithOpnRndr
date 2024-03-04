@@ -1,23 +1,10 @@
 
 Thoughts:
 
-1. Ball is a DTO without behavior.  Separtion between display and physics model
+1. Ball is a DTO without behavior.  Separation between display and physics model
     What do you think?
-2. Panel - IntellJ wants to refactor it.
-3. The ugly dropball method
-
-Rearrange the UI so that less needed things are on the left.
-Top row should have Cue Stroke,
-
-Add a slider to set the move increment (1 to 100)
-
-Add a "Rack" button
-
-    Add the load and store functionality
-    Will the file include both balls and the table constants?
-
-Add communication with sockets -
-    Send the cue stroke over - set table constants from that
+2. Panel - IntelJ wants to refactor it.
+3. The ugly drop ball method
 
 Show the entire cushion with diamond markings. Then in checkForPockets,
 will need to move the balls off the table.   The pockets will be bigger

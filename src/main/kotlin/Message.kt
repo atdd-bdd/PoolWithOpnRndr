@@ -8,8 +8,7 @@ class Message {
         val ballValue = getGameStringList(ballsAll)
         val lines = concatenate(headerValue, configurationValue, ballValue)
 
-        val ret = lines.joinToString(separator = "\n")
-        return  ret
+        return lines.joinToString(separator = "\n")
     }
     fun fromString(value: String) : Boolean{
          var lines = value.split("\r\n", "\n", "\r")

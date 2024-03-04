@@ -12,7 +12,7 @@ fun communication(client: HttpClient, messageOut: String): String {
     try {
         runBlocking {
             launch {
-                var outputMessage = messageOut.toString()
+                var outputMessage = messageOut
                 client.webSocket(method = HttpMethod.Get, host = "poolserver-ken.koyeb.app", port = 80, path = "/ws") {
 
                     if (outputMessage != "") {

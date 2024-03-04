@@ -1,4 +1,4 @@
-
+// Nots on UI
 
         val gui = GUI()
         val settings = object {

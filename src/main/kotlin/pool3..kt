@@ -329,9 +329,9 @@ fun main() = application {
                 Debug.println("Sending ${configuration.cueAngleTrim} $your_turn")
 
                 val inputText = communication(client, messageOut.toString())
-
                 val goodMessage = messageIn.fromString(inputText)
                 errorMessage = "All OK"
+
                 if (goodMessage) {
                     opponentMessage = messageIn.header.opponentMessage
                     if (previousMessageDateStamp == messageIn.header.dateStamp) {

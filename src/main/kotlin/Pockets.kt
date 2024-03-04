@@ -64,32 +64,32 @@ class FootRightCornerPocket {
 
 class LeftSidePocket {
     val center = TABLE_SIZE.x / 2
-    val half_width = SIDE_POCKET_LENGTH / 2
+    val halfWidth = SIDE_POCKET_LENGTH / 2
     val sideLine = LineSegment(
-        Vector2(center - half_width, 0.0),
-        Vector2(center + half_width, 0.0)
+        Vector2(center - halfWidth, 0.0),
+        Vector2(center + halfWidth, 0.0)
     )
     val pocketCircle = Circle(center, 0.0 - CIRCLE_OFFSET * 2, BALL_RADIUS * 2)
 
     fun headedTowardSide(position: Position, velocity: Velocity): Boolean {
         return (velocity.y < 0
-                && (position.x > center - half_width + BALL_RADIUS)
-                && (position.x < center + half_width - BALL_RADIUS))
+                && (position.x > center - halfWidth + BALL_RADIUS)
+                && (position.x < center + halfWidth - BALL_RADIUS))
     }
 }
 
 class RightSidePocket {
     val center = TABLE_SIZE.x / 2
-    val half_width = SIDE_POCKET_LENGTH / 2
+    val halfWidth = SIDE_POCKET_LENGTH / 2
     val sideLine = LineSegment(
-        Vector2(center - half_width, TABLE_SIZE.y),
-        Vector2(center + half_width, TABLE_SIZE.y)
+        Vector2(center - halfWidth, TABLE_SIZE.y),
+        Vector2(center + halfWidth, TABLE_SIZE.y)
     )
     val pocketCircle = Circle(center, TABLE_SIZE.y + CIRCLE_OFFSET * 2, BALL_RADIUS * 2)
     fun headedTowardSide(position: Position, velocity: Velocity): Boolean {
         return (velocity.y > 0
-                && (position.x > center - half_width + BALL_RADIUS)
-                && (position.x < center + half_width - BALL_RADIUS))
+                && (position.x > center - halfWidth + BALL_RADIUS)
+                && (position.x < center + halfWidth - BALL_RADIUS))
     }
 }
 

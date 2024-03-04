@@ -18,6 +18,7 @@ fun printBall(ball: Ball)
 
 
 }
+@Suppress("unused", "unused")
 fun printBalls(balls: Array<Ball>){
     Debug.debugOn = true
     for (ball in balls)

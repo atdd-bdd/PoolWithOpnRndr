@@ -2,7 +2,6 @@ import org.openrndr.dialogs.getDefaultPathForContext
 import org.openrndr.dialogs.openFileDialog
 import org.openrndr.dialogs.saveFileDialog
 import org.openrndr.dialogs.setDefaultPathForContext
-import org.openrndr.panel.style.Position
 import java.io.File
 
 fun saveConfigurationToFile(configuration: Configuration) {
@@ -54,8 +53,7 @@ fun readConfigurationString(text: String): Configuration {
 fun loadConfiguration(it: File): Configuration {
 
     val text = it.readText()
-    val configuration = readConfigurationString(text)
-    return configuration
+    return readConfigurationString(text)
 }
 
 fun loadGameFromFile(balls: Array<Ball>) : Array<Ball> {
@@ -97,14 +95,12 @@ fun saveGameToFile(balls: Array<Ball>) {
 fun loadGame(it: File, ballsCurrent: Array<Ball>): Array<Ball> {
 
     val text = it.readText()
-    val ballsOut = readGameString(text, ballsCurrent)
-    return ballsOut
+    return readGameString(text, ballsCurrent)
 }
 
 fun readGameString(text: String, ballsCurrent: Array<Ball>): Array<Ball> {
     val lines = text.split("\r\n", "\n", "\r")
-    val ballsOut = readGameStringList(lines, ballsCurrent)
-    return ballsOut
+    return readGameStringList(lines, ballsCurrent)
 }
 
 fun readGameStringList(lines: List<String>, ballsCurrent: Array<Ball>): Array<Ball> {
