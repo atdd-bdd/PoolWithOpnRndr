@@ -14,7 +14,7 @@ fun moveBalls(
 ) {
 //    print (" DeltaTime " +  deltaTime.toString() )
 //    print (" Segments " + segments.toString() +
-//            " displayIncremenat "  + displayIncrement.toString())
+//            " displayIncrement "  + displayIncrement.toString())
 //    print ("Velocity " + balls[0].velocity.x + " " + balls[0].velocity.y)
 //        print("\n")
 //    val (initialEnergy, initialMomentum) = computeEnergyMomentum(balls)

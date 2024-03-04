@@ -1,11 +1,9 @@
+@file:Suppress("LocalVariableName")
+
 import io.ktor.client.*
 import io.ktor.client.plugins.websocket.*
 import org.openrndr.*
 import org.openrndr.color.ColorRGBa
-import org.openrndr.dialogs.getDefaultPathForContext
-import org.openrndr.dialogs.openFileDialog
-import org.openrndr.dialogs.saveFileDialog
-import org.openrndr.dialogs.setDefaultPathForContext
 import org.openrndr.draw.loadFont
 import org.openrndr.extra.color.presets.*
 import org.openrndr.math.Vector2
@@ -17,7 +15,6 @@ import org.openrndr.panel.style.Display
 
 import org.openrndr.panel.styleSheet
 import org.openrndr.shape.Rectangle
-import java.io.File
 import kotlin.math.roundToInt
 
 const val BALL_RADIUS = 10.00
@@ -59,7 +56,7 @@ fun main() = application {
     var opponentID = ""
     var yourMessage = ""
     var opponentMessage = ""
-    var iswitchedTurns = 0
+    var switchedTurns = 0
 
     configure {
         width = 1200
@@ -70,10 +67,10 @@ fun main() = application {
         windowResizable = false
     }
     program {
-        var messageIn = Message()
-        var messageOut = Message()
+        val messageIn = Message()
+        val messageOut = Message()
         var your_turn = true
-        var previousMessageCheck = program.seconds
+        var previousMessageSendDelta = program.seconds
         var previousTime = program.seconds
         var moving = false
         var startMoving = false
@@ -81,7 +78,8 @@ fun main() = application {
         var startPosition = Position(0.0, 0.0)
         val pockets = Pockets()
         var errorMessage = ""
-        var statusMessage = ""
+        var statusMessage: String
+        var noMessageCount = 0
         mouse.buttonDown.listen {
             //print( it.position.toString() + "\n")
             val currentPosition = mouseToPosition(it, tableUpperLeft)
@@ -298,7 +296,7 @@ fun main() = application {
                         label = "Switch turn"
                         clicked {
                             your_turn = !your_turn
-                            iswitchedTurns = 0
+                            switchedTurns = 0
                         }
                     }
 
@@ -310,14 +308,14 @@ fun main() = application {
         extend {
             var deltaTime = this.seconds - previousTime
             val timesPerSecond = 1.0 / deltaTime
-            Debug.println("Delta Time is $deltaTime per second $timesPerSecond \n" )
+            Debug.println("Delta Time is $deltaTime per second $timesPerSecond \n")
             previousTime = this.seconds
-            val messageTime = this.seconds - previousMessageCheck
+            val messageTime = this.seconds - previousMessageSendDelta
             val addressesSet = opponentID != "" && yourID != ""
-            if (!addressesSet)
-                statusMessage = "Playing Solo"
+            statusMessage = if (!addressesSet)
+                "Playing Solo"
             else
-                statusMessage = "Playing with $opponentID "
+                "Playing with $opponentID "
             if (((messageTime > 1.0 && !moving) || startMoving) && addressesSet) {
                 messageOut.ballsAll = balls
                 messageOut.configuration = configuration.copy()
@@ -336,26 +334,31 @@ fun main() = application {
                 errorMessage = "All OK"
                 if (goodMessage) {
                     opponentMessage = messageIn.header.opponentMessage
+                    if (previousMessageDateStamp == messageIn.header.dateStamp) {
+                        noMessageCount++
+                        Debug.println("No new message received")
+                        if (noMessageCount > 2)
+                            errorMessage = "Connection Lost "
+                    } else
+                        noMessageCount = 0
                 } else
                     errorMessage = "Not connected"
-                var listenToOpponent = !your_turn && goodMessage && previousMessageDateStamp !=
+                val listenToOpponent = !your_turn && goodMessage && previousMessageDateStamp !=
                         messageIn.header.dateStamp
-                if (previousMessageDateStamp ==  messageIn.header.dateStamp)
-                    Debug.println("No new message received")
                 if (listenToOpponent) {
                     balls = messageIn.ballsAll
                     configuration = messageIn.configuration.copy()
                     Debug.println("Receiving ${configuration.cueAngleTrim}")
-                   // opponentID = messageIn.header.opponentID
+                    // opponentID = messageIn.header.opponentID
                     //yourID = messageIn.header.yourID
                     opponentMessage = messageIn.header.opponentMessage
                     startMoving = messageIn.header.startMoving
-                    if (iswitchedTurns++ > 3)
+                    if (switchedTurns++ > 3)
                         your_turn = !messageIn.header.yourTurn
                     previousMessageDateStamp = messageIn.header.dateStamp
                     Debug.println("Received Your turn $your_turn  starting $startMoving")
                 }
-                previousMessageCheck = this.seconds
+                previousMessageSendDelta = this.seconds
 
             }
             drawTable(tableUpperLeft, TABLE_SIZE, pockets)
@@ -365,8 +368,8 @@ fun main() = application {
                 moveCount = 0
                 totalMoveTime = 0.0
                 moving = true
-               val segmentsPossibly = totalVelocity(startingVelocity) / 0.1
-               Debug.println("*************************Possible segments $segmentsPossibly\n")
+                val segmentsPossibly = totalVelocity(startingVelocity) / 0.1
+                Debug.println("*************************Possible segments $segmentsPossibly\n")
                 computationSegments = 100
                 previousBalls = copyBalls(balls)
 
@@ -395,7 +398,7 @@ fun main() = application {
                     computationTime,
                     pockets
                 )
-                val time = program.seconds
+
                 totalMoveTime += deltaTime
                 Debug.println("Delta time $deltaTime move $moveCount total $totalMoveTime")
 
@@ -432,15 +435,15 @@ fun whichBallToMove(position: Position, balls: Array<Ball>): Int {
 
 }
 
-fun restoreBalls(previousBalls: List<Ball>): Array<Ball> {
-    val size = previousBalls.size
-    val initBall = Ball(1, Position(0.0, 0.0), Velocity(0.0, 0.0), true)
-    val balls = Array<Ball>(size) { _ -> initBall }
-    for ((index, ball) in previousBalls.withIndex()) {
-        balls[index] = ball
-    }
-    return balls
-}
+//fun restoreBalls(previousBalls: List<Ball>): Array<Ball> {
+//    val size = previousBalls.size
+//    val initBall = Ball(1, Position(0.0, 0.0), Velocity(0.0, 0.0), true)
+//    val balls = Array<Ball>(size) { _ -> initBall }
+//    for ((index, ball) in previousBalls.withIndex()) {
+//        balls[index] = ball
+//    }
+//    return balls
+//}
 
 private fun Program.drawBalls(
     balls: Array<Ball>, colors: Array<ColorRGBa>, hasStripe: Array<Boolean>, tableUpperLeft: Vector2,
@@ -545,7 +548,7 @@ fun Program.drawChat(
     drawer.fill = ColorRGBa.GRAY
     drawer.stroke = ColorRGBa.GRAY
     drawer.strokeWeight = 2.0
-    var box1 = Rectangle(0.0, 550.0, 200.0, 200.0)
+    val box1 = Rectangle(0.0, 550.0, 200.0, 200.0)
     drawer.rectangle(box1)
     val font = loadFont(fontFileName, 24.0)
     drawer.fontMap = font
@@ -624,10 +627,10 @@ private fun Program.drawPockets(tableUpperLeft: Vector2, pockets: Pockets) {
 fun yourTurnLabel(your_turn: Boolean): String {
     val yourTurnLabel = "Turn:     Yours"
     val opponentTurnLabel = "Turn: Opponents"
-    if (your_turn) {
-        return yourTurnLabel
+    return if (your_turn) {
+        yourTurnLabel
     } else
-        return opponentTurnLabel
+        opponentTurnLabel
 }
 
 
@@ -641,7 +644,7 @@ private fun Program.drawPocketLine(lineSegment: LineSegment, tableUpperLeft: Vec
     drawer.lineSegment(lineSegment.start + tableUpperLeft, lineSegment.end + tableUpperLeft)
 }
 
-private fun Program.drawBall(
+fun Program.drawBall(
     position: Position, radius: Double, color: ColorRGBa, hasStripe: Boolean, tableUpperLeft: Vector2,
 ) {
     val positionV1 = position.toVector2()
@@ -689,8 +692,8 @@ fun initialBalls(): Array<Ball> {
 }
 
 fun copyBalls(inValue: Array<Ball>): Array<Ball> {
-    var balls = initialBalls()
-    for (i in 0 until inValue.size) {
+    val balls = initialBalls()
+    for (i in inValue.indices) {
         val inBall = inValue[i]
         balls[i].position = Position(inBall.position.x, inBall.position.y)
         balls[i].velocity = Velocity(inBall.velocity.x, inBall.velocity.y)
