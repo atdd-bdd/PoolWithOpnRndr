@@ -7,7 +7,7 @@ class Header {
     var startMoving = false
     var yourTurn = true
     var dateStamp = 0.0
-    var version = "V1.0"
+    private var version = "V1.0"
     fun toStringList(): List<String> {
         return listOf(
             opponentID, yourID, yourMessage, "NOT NEEDED", startMoving.toString(),

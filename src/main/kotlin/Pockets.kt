@@ -63,8 +63,8 @@ class FootRightCornerPocket {
 }
 
 class LeftSidePocket {
-    val center = TABLE_SIZE.x / 2
-    val halfWidth = SIDE_POCKET_LENGTH / 2
+    private val center = TABLE_SIZE.x / 2
+    private val halfWidth = SIDE_POCKET_LENGTH / 2
     val sideLine = LineSegment(
         Vector2(center - halfWidth, 0.0),
         Vector2(center + halfWidth, 0.0)
@@ -79,8 +79,8 @@ class LeftSidePocket {
 }
 
 class RightSidePocket {
-    val center = TABLE_SIZE.x / 2
-    val halfWidth = SIDE_POCKET_LENGTH / 2
+    private val center = TABLE_SIZE.x / 2
+    private val halfWidth = SIDE_POCKET_LENGTH / 2
     val sideLine = LineSegment(
         Vector2(center - halfWidth, TABLE_SIZE.y),
         Vector2(center + halfWidth, TABLE_SIZE.y)
@@ -94,12 +94,12 @@ class RightSidePocket {
 }
 
 class Pockets {
-    val headLeftCornerPocket = HeadLeftCornerPocket()
-    val headRightCornerPocket = HeadRightCornerPocket()
-    val footLeftCornerPocket = FootLeftCornerPocket()
-    val footRightCornerPocket = FootRightCornerPocket()
-    val rightSidePocket = RightSidePocket()
-    val leftSidePocket = LeftSidePocket()
+    private val headLeftCornerPocket = HeadLeftCornerPocket()
+    private val headRightCornerPocket = HeadRightCornerPocket()
+    private val footLeftCornerPocket = FootLeftCornerPocket()
+    private val footRightCornerPocket = FootRightCornerPocket()
+    private val rightSidePocket = RightSidePocket()
+    private val leftSidePocket = LeftSidePocket()
     val lines: Array<LineSegment> = arrayOf(
         headLeftCornerPocket.sideLine, headLeftCornerPocket.headLine,
         headRightCornerPocket.sideLine, headRightCornerPocket.headLine,
@@ -198,11 +198,11 @@ class Pockets {
 
     var leftSidePocketLine: LineSegment
     var rightSidePocketLine: LineSegment
-    var footRightCornerPocketFootLine: LineSegment
-    var footRightCornerPocketSideLine: LineSegment
+    private var footRightCornerPocketFootLine: LineSegment
+    private var footRightCornerPocketSideLine: LineSegment
     var headRightCornerPocketHeadLine: LineSegment
-    var headRightCornerPocketSideLine: LineSegment
-    var footLeftCornerPocketFootLine: LineSegment
+    private var headRightCornerPocketSideLine: LineSegment
+    private var footLeftCornerPocketFootLine: LineSegment
     var footLeftCornerPocketSideLine: LineSegment
     var headLeftCornerPocketHeadLine: LineSegment
     var headLeftCornerPocketSideLine: LineSegment

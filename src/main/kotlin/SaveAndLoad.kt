@@ -163,7 +163,7 @@ fun getGameString(balls: Array<Ball>): String {
 }
 
 fun getGameStringList(balls: Array<Ball>): List<String> {
-    var result = mutableListOf<String>()
+    val result = mutableListOf<String>()
     result.add("Symbol,PositionX,PositionY,VelocityX,VelocityY,Active")
     for (i in balls.indices) {
         val ball = balls[i]

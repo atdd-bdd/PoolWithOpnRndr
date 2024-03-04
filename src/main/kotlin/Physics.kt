@@ -131,6 +131,7 @@ fun colliding(position1: Position, position2: Position): Boolean {
 }
 
 
+@Suppress("ReplaceWithOperatorAssignment")
 fun computeCollisionVelocity(
     position1: Position, velocity1: Velocity,
     position2: Position, velocity2: Velocity, restitution: Double
@@ -353,7 +354,7 @@ fun checkForDropLocation(
 fun rackBalls(balls: Array<Ball>) {
     val headBallPosition = Position(3 * TABLE_SIZE.x / 4, TABLE_SIZE.y / 2)
     val diameter = BALL_RADIUS * 2
-    val rowDistance = Math.sqrt(diameter * diameter - BALL_RADIUS * BALL_RADIUS)
+    val rowDistance = sqrt(diameter * diameter - BALL_RADIUS * BALL_RADIUS)
     val cueBallPosition = (Position(TABLE_SIZE.x / 4, TABLE_SIZE.y / 2))
     val positions = arrayOf(
         Position(0.0, 0.0),

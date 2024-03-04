@@ -9,7 +9,7 @@ class Configuration
     var cueAngleTrim = 0.0
 
     fun copy() : Configuration{
-        var out = Configuration()
+        val out = Configuration()
         out.cueAngle = cueAngle
         out.cueForce = cueForce
         out.rollingResistance = rollingResistance

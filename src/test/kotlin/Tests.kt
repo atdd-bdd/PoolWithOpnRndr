@@ -143,8 +143,8 @@ class Tests {
     fun testCheckCollisionZ() {
         val position1 = Position(100.0, 100.0)
         val position2 = Position(100.0 , 100.0+ 2 * BALL_RADIUS)
-        val velocity1 = Velocity( 0.0,100.0,)
-        val velocity2 = Velocity(0.0, -100.0, )
+        val velocity1 = Velocity( 0.0,100.0)
+        val velocity2 = Velocity(0.0, -100.0)
         val velocities: TwoVelocities = twoVelocities(velocity1, velocity2, position1, position2)
         val expectedVelocity1 = Velocity(0.0,-95.0)
         val expectedVelocity2 = Velocity(  0.0, 95.0,)
@@ -192,7 +192,6 @@ fun testCheckCollisionFromTests() {
         val position2 = Position(221.0,300.0)
         val velocity1 = Velocity(874.5418780665148,1077.6598499954475)
         val velocity2 = Velocity(0.0,0.0)
-        println("&&&&&&&&&&&&&&&&&&&&&")
 
         val velocities: TwoVelocities = twoVelocities(velocity1, velocity2, position1, position2)
         println(" $velocities.velocity1  $velocities.velocity2}")
@@ -208,7 +207,6 @@ fun testCheckCollisionFromTests() {
         val position2 = Position(242.0,300.0)
         val velocity1 = Velocity(1030.320041747319,254.89447082351938)
         val velocity2 = Velocity(0.0,0.0)
-        println("&&&&&&&&&&&&&&&&&&&&&")
         val velocities: TwoVelocities = twoVelocities(velocity1, velocity2, position1, position2)
     }
 
@@ -236,7 +234,6 @@ fun testCheckCollisionFromTests() {
 fun initializeDeltaTimes() : Array<Double>
 {
     return arrayOf(
-//    000001585,
         0.015799899999997535,
         0.013361299999999687,
         0.0105762000000027,

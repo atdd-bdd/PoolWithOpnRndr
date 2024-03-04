@@ -55,7 +55,7 @@ fun printBallsDifference(previousBalls: Array<Ball>, currentBalls: Array<Ball>){
         return
     println("Ball differences ")
   //  println("Previous " + getGameString())
-    for (i in 0 until previousBalls.size)
+    for (i in previousBalls.indices)
     {
         val balls1 = previousBalls[i]
         val balls2 = currentBalls[i]
