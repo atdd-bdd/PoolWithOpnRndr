@@ -124,7 +124,7 @@ class Pockets {
 
     fun checkCushion(
 // this shows four ways of writing an if
-        position: Position, velocity: Velocity, tableSize: Vector2,
+        position: Position, velocity: Velocity, ignoredTableSize: Vector2,
         cushionElasticity: Double,
     ): Velocity {
         if (atLeftSideRail(position, velocity)) {

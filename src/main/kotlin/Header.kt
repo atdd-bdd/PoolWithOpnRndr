@@ -15,7 +15,7 @@ class Header {
         }
         fun fromStringList(lines : List<String>): List<String> {
             if (lines.size < 8) {
-                println("Not long enough for header on input ")
+                Debug.println("Not long enough for header on input ")
                 return listOf("")
             }
 //            opponentID  = lines[0]

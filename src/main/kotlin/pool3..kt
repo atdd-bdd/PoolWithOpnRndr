@@ -196,27 +196,28 @@ fun main() = application {
                     button {
                         label = "Load Game"
                         clicked {
-                            LoadGame(balls)
+                            balls = loadGameFromFile(balls)
+
                         }
                     }
 
                     button {
                         label = "Save Game"
                         clicked {
-                            saveGame(balls)
+                            saveGameToFile(balls)
                         }
                     }
                     button {
                         label = "Load Config"
                         clicked {
-                            LoadConfiguration()
+                            configuration = loadConfigurationFromFile()
                         }
 
                     }
                     button {
                         label = "Save Config"
                         clicked {
-                            statusMessage = "Do save config"
+                            saveConfigurationToFile(configuration)
                         }
                     }
                     slider {
@@ -270,14 +271,14 @@ fun main() = application {
                         range = Range(1.0, computationSegments.toDouble())
                         events.valueChanged.listen { configuration.displayIncrement = (it.newValue + .01).toInt() }
                     }
-                    textfield() {
+                    textfield {
                         label = "Your ID"
                         value = yourID
                         events.valueChanged.listen {
                             yourID = it.newValue
                         }
                     }
-                    textfield() {
+                    textfield {
                         label = "Opponent ID"
                         value = opponentID
                         events.valueChanged.listen {
@@ -308,8 +309,8 @@ fun main() = application {
 
         extend {
             var deltaTime = this.seconds - previousTime
-            // val timesPerSecond = 1.0 / deltaTime
-            // println("Delta Time is $deltaTime per second $timesPerSecond \n" )
+            val timesPerSecond = 1.0 / deltaTime
+            Debug.println("Delta Time is $deltaTime per second $timesPerSecond \n" )
             previousTime = this.seconds
             val messageTime = this.seconds - previousMessageCheck
             val addressesSet = opponentID != "" && yourID != ""
@@ -327,7 +328,7 @@ fun main() = application {
                 messageOut.header.startMoving = startMoving
                 messageOut.header.yourTurn = your_turn
                 messageOut.header.dateStamp = program.seconds
-                println("Sending ${configuration.cueAngleTrim} $your_turn")
+                Debug.println("Sending ${configuration.cueAngleTrim} $your_turn")
 
                 val inputText = communication(client, messageOut.toString())
 
@@ -340,11 +341,11 @@ fun main() = application {
                 var listenToOpponent = !your_turn && goodMessage && previousMessageDateStamp !=
                         messageIn.header.dateStamp
                 if (previousMessageDateStamp ==  messageIn.header.dateStamp)
-                    println("No new message received")
+                    Debug.println("No new message received")
                 if (listenToOpponent) {
                     balls = messageIn.ballsAll
                     configuration = messageIn.configuration.copy()
-                    println("Receiving ${configuration.cueAngleTrim}")
+                    Debug.println("Receiving ${configuration.cueAngleTrim}")
                    // opponentID = messageIn.header.opponentID
                     //yourID = messageIn.header.yourID
                     opponentMessage = messageIn.header.opponentMessage
@@ -352,7 +353,7 @@ fun main() = application {
                     if (iswitchedTurns++ > 3)
                         your_turn = !messageIn.header.yourTurn
                     previousMessageDateStamp = messageIn.header.dateStamp
-                    print("Received Your turn $your_turn  starting $startMoving")
+                    Debug.println("Received Your turn $your_turn  starting $startMoving")
                 }
                 previousMessageCheck = this.seconds
 
@@ -364,8 +365,8 @@ fun main() = application {
                 moveCount = 0
                 totalMoveTime = 0.0
                 moving = true
-//                val segmentsPossibly = totalVelocity(startingVelocity) / 0.1
-//                    print("*************************Possible segments $segmentsPossibly\n")
+               val segmentsPossibly = totalVelocity(startingVelocity) / 0.1
+               Debug.println("*************************Possible segments $segmentsPossibly\n")
                 computationSegments = 100
                 previousBalls = copyBalls(balls)
 
@@ -396,8 +397,8 @@ fun main() = application {
                 )
                 val time = program.seconds
                 totalMoveTime += deltaTime
-                //println("Delta time $deltaTime move $moveCount total $totalMoveTime")
-//                println("$deltaTime,")
+                Debug.println("Delta time $deltaTime move $moveCount total $totalMoveTime")
+
                 moveCount++
 
                 if (stoppedMoving(balls)) {
@@ -412,122 +413,6 @@ fun main() = application {
             }
         }
     }
-}
-
-private fun LoadConfiguration() {
-    openFileDialog(supportedExtensions = listOf("poolc"), contextID = "pool") {
-        print(it)
-    }
-    print("Load file")
-}
-
-private fun Program.LoadGame(balls: Array<Ball>) {
-    openFileDialog(supportedExtensions = listOf("pool"), contextID = "pool") { loadGame(it, balls) }
-    print("Load file")
-}
-
-private fun Program.saveGame(balls: Array<Ball>) {
-    val defaultPath = getDefaultPathForContext(contextID = "pool")
-    val defaultSaveFolder = "pool"
-    if (defaultPath == null) {
-        val local = File(".")
-        val parameters = File(local, defaultSaveFolder)
-        if (parameters.exists() && parameters.isDirectory) {
-            setDefaultPathForContext(contextID = "pool", file = parameters)
-        } else {
-            if (parameters.mkdirs()) {
-                setDefaultPathForContext(
-                    contextID = "pool",
-                    file = parameters
-                )
-            } else {
-                print("Could not create directory ${parameters.absolutePath}")
-            }
-        }
-    }
-
-    saveFileDialog(
-        suggestedFilename = "game1.pool",
-        contextID = "pool",
-        supportedExtensions = listOf("pool")
-    ) {
-        saveGame(it, balls)
-    }
-}
-
-
-fun Program.loadGame(it: File, ballsCurrent: Array<Ball>): Array<Ball> {
-    print("Loading game from $it")
-    val text = it.readText()
-    val ballsOut = readGameString(text, ballsCurrent)
-    return ballsOut
-}
-
-fun readGameString(text: String, ballsCurrent: Array<Ball>): Array<Ball> {
-    val lines = text.split("\r\n", "\n", "\r");
-    val ballsOut = readGameStringList(lines, ballsCurrent)
-    return ballsOut
-}
-
-fun readGameStringList(lines: List<String>, ballsCurrent: Array<Ball>): Array<Ball> {
-    val ballsOut = copyBalls(ballsCurrent)
-    if (lines.size < 17) {
-        println("Not changing balls on input - bad size")
-        return ballsOut
-    }
-
-    var firstLine = true
-    var index = 0
-    for (line in lines) {
-        if (firstLine) {
-            firstLine = false
-            continue
-        }
-        val fields = line.split(',')
-        try {
-            val ball = Ball(
-                fields[0].toInt(), Position(
-                    fields[1].toDouble(),
-                    fields[2].toDouble()
-                ), Velocity(fields[3].toDouble(), fields[4].toDouble()),
-                fields[5].toBoolean()
-            )
-            ballsOut[index] = ball
-            index++
-
-        } catch (e: NumberFormatException) {
-            print("Number format exception")
-        }
-        val size = ballsOut.size
-        if (index >= size)
-            break
-    }
-    return ballsOut
-}
-
-fun Program.saveGame(it: File, ballsIn: Array<Ball>) {
-    print("Storing game into $it")
-    val text = getGameString(ballsIn)
-    it.writeText(text)
-}
-
-fun getGameString(balls: Array<Ball>): String {
-    val list = getGameStringList(balls)
-    return list.joinToString(separator = "\n")
-}
-
-fun getGameStringList(balls: Array<Ball>): List<String> {
-    var result = mutableListOf<String>()
-    result.add("Symbol,PositionX,PositionY,VelocityX,VelocityY,Active")
-    for (i in balls.indices) {
-        val ball = balls[i]
-        val line = String.format(
-            "${ball.symbol},${ball.position.x},${ball.position.y}," +
-                    "${ball.velocity.x},${ball.velocity.y},${ball.active}"
-        )
-        result.add(line)
-    }
-    return result
 }
 
 private fun mouseToPosition(it: MouseEvent, tableUpperLeft: Vector2) =
@@ -811,7 +696,7 @@ fun copyBalls(inValue: Array<Ball>): Array<Ball> {
         balls[i].velocity = Velocity(inBall.velocity.x, inBall.velocity.y)
         balls[i].active = inBall.active
         if (balls[i].symbol != i)
-            println("Symbol on copy is wrong ")
+            Debug.println("Symbol on copy is wrong ")
     }
     return balls
 }

@@ -46,12 +46,14 @@ fun checkMomentum(velocity1: Velocity, velocity2: Velocity, velocity11: Velocity
     val xEnd = velocity11.x + velocity21.x
     val yEnd = velocity11.y + velocity21.y
     if (xEnd -.0001 > xStart)
-        println("**** X Momentum increased $xEnd from $xStart ")
+       Debug.println("**** X Momentum increased $xEnd from $xStart ")
     if (yEnd - .0001 > yStart)
-        println("***Y Momentum increased $yEnd from $yStart")
+       Debug.println("***Y Momentum increased $yEnd from $yStart")
 }
 
 fun printBallsDifference(previousBalls: Array<Ball>, currentBalls: Array<Ball>){
+    if (!Debug.debugOn)
+        return
     println("Ball differences ")
   //  println("Previous " + getGameString())
     for (i in 0 until previousBalls.size)

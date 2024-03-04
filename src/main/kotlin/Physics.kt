@@ -66,12 +66,12 @@ private fun checkForIncrease(
     symbol: String
 ): Boolean {
     if (currentEnergy - .01 > previousEnergy) {
-//        println("Energy  increasing ******* $currentEnergy from $previousEnergy  in move balls at $symbol")
-        return true;
+       Debug.println("Energy  increasing ******* $currentEnergy from $previousEnergy  in move balls at $symbol")
+        return true
     }
     if (currentMomentum - .01 > previousMomentum) {
-//        println(" Momentum increasing ******* $ $currentMomentum from $previousMomentum in move balls at $symbol")
-        return true;
+       Debug.println(" Momentum increasing ******* $ $currentMomentum from $previousMomentum in move balls at $symbol")
+        return true
     }
     return false
 }
@@ -95,12 +95,12 @@ fun computeCollisions(balls: Array<Ball>, restitution: Double) {
                 )
                 val endMomentum = computeTotalMomentum(velocities.velocity1, velocities.velocity2)
                 if (endMomentum - .01 > startMomentum) {
-//                    println("***** Ball momentum increasing $first $second ")
-//                    printBall(firstBall)
-//                    printBall(secondBall)
-//                    println("End momentum $endMomentum from $startMomentum")
-//                    println("End velocity  $velocities.velocity1,  $velocities.velocity2")
-//                    checkMomentum(firstBall.velocity, secondBall.velocity, velocities.velocity1, velocities.velocity2)
+                    Debug.println("***** Ball momentum increasing $first $second ")
+                    printBall(firstBall)
+                    printBall(secondBall)
+                    Debug.println("End momentum $endMomentum from $startMomentum")
+                    Debug.println("End velocity  $velocities.velocity1,  $velocities.velocity2")
+                    checkMomentum(firstBall.velocity, secondBall.velocity, velocities.velocity1, velocities.velocity2)
                 }
                 balls[first].velocity = velocities.velocity1
                 balls[second].velocity = velocities.velocity2
@@ -159,7 +159,7 @@ fun computeCollisionVelocity(
 
     val checkColliding = (vx21 * x21 + vy21 * y21)
     if (checkColliding >= 0) {
-        print("Not colliding $vx21 $x21  $vy21 $y21 check $checkColliding")
+        Debug.println("Not colliding $vx21 $x21  $vy21 $y21 check $checkColliding")
         return TwoVelocities(velocity1, velocity2)
     }
 //     *** I have inserted the following statements to avoid a zero divide;
@@ -168,7 +168,7 @@ fun computeCollisionVelocity(
 
     val fy21 = 1.0E-12 * abs(y21)
     if (abs(x21) < fy21) {
-//        println("Setting too small value $x21 $fy21 $y21")
+        Debug.println("Setting too small value $x21 $fy21 $y21")
         x21 = fy21 * getSign(x21)
     }
 //     ***  update velocities ***

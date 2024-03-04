@@ -11,24 +11,18 @@ fun communication(client: HttpClient, messageOut: String): String {
         runBlocking {
             launch {
                 var outputMessage = messageOut.toString()
-//            println("Communicating $outputMessage")
                 client.webSocket(method = HttpMethod.Get, host = "poolserver-ken.koyeb.app", port = 80, path = "/ws") {
 
-//                while (true) {
                     if (outputMessage != "") {
                         send(outputMessage)
                         outputMessage = ""
-//                    println("Sent message")
                         val inputMessage = incoming.receive() as? Frame.Text?
                         if (inputMessage != null) {
                             text = inputMessage.readText()
-//                        println(text)
+
 
                         }
                     }
-//                        else
-//                            yield()
-//                    }
                 }
             }
         }

@@ -2,6 +2,8 @@ data class Ball(val symbol: Int , var position: Position, var velocity: Velocity
 
 fun printBall(ball: Ball)
 {
+    if (!Debug.debugOn)
+        return
     print("Ball ")
     print (ball.symbol)
     print(" Position(")
@@ -15,4 +17,14 @@ fun printBall(ball: Ball)
     println(")")
 
 
+}
+fun printBalls(balls: Array<Ball>){
+    Debug.debugOn = true
+    for (ball in balls)
+    {
+        printBall(ball)
+    }
+
+
+    Debug.debugOn = false
 }
