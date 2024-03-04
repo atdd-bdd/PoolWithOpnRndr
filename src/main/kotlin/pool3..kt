@@ -18,6 +18,7 @@ import org.openrndr.panel.style.Display
 import org.openrndr.panel.styleSheet
 import org.openrndr.shape.Rectangle
 import java.io.File
+import kotlin.math.roundToInt
 
 const val BALL_RADIUS = 10.00
 const val BALL_DIAMETER_SQUARED = (BALL_RADIUS * 2) * (BALL_RADIUS * 2)
@@ -31,6 +32,7 @@ fun main() = application {
         install(WebSockets)
     }
     val fontFileName = turnResourceIntoFile("/data/fonts/default.otf")
+
     val MINIMUM_RESISTANCE = 0.0
     val MAXIMUM_RESISTANCE = 0.05
     val MAXIMUM_CUSHION_ELASTICITY = 1.0
@@ -38,30 +40,27 @@ fun main() = application {
     val MAXIMUM_FORCE = 5000.0
 
     var balls: Array<Ball> = initialBalls()
-
-    var cueAngle = 0.0
-    var cueForce = 0.0
-    var startingVelocity = Velocity(0.0, 0.0)
-
-    var rollingResistance = 0.01
-    var restitution = 0.95
-    var cushionElasticity = 0.70
-
-    var displayIncrement = 100
     var previousBalls = initialBalls()
-    var previousMessageDateStamp = 0.0
-    var moveCount = 0
-    var totalMoveTime = 0.0
     val colors = colorOfBalls()
     val stripes = stripOnBalls()
 
-    val tableUpperLeft = Vector2(250.0, 230.0)
+    var configuration = Configuration()
+
+    var startingVelocity = Velocity(0.0, 0.0)
 
     var computationSegments = 100
+    var moveCount = 0
+    var totalMoveTime = 0.0
+
+    val tableUpperLeft = Vector2(250.0, 230.0)
+
+    var previousMessageDateStamp = 0.0
     var yourID = ""
     var opponentID = ""
     var yourMessage = ""
     var opponentMessage = ""
+    var iswitchedTurns = 0
+
     configure {
         width = 1200
         height = 750
@@ -69,7 +68,6 @@ fun main() = application {
         minimumHeight = 700
         minimumWidth = 1200
         windowResizable = false
-
     }
     program {
         var messageIn = Message()
@@ -113,7 +111,7 @@ fun main() = application {
                 backgroundColor = ColorRGBa.WHITE
                 styleSheet(has class_ "horizontal") {
                     paddingLeft = 10.px
-                    paddingTop = 10.px
+                    paddingTop = 5.px
                     background = Color.RGBa(ColorRGBa.LIGHT_GREEN)
                     // ----------------------------------------------
                     // The next two lines produce a horizontal layout
@@ -121,26 +119,29 @@ fun main() = application {
                     display = Display.FLEX
                     flexDirection = FlexDirection.Row
                     width = 95.percent
+                    height = 60.px
                 }
                 styleSheet(has type "textfield") {
                     color = Color.RGBa(ColorRGBa.BLACK)
                     height = 40.px
-                    fontSize = 16.px
+                    fontSize = 18.px
                 }
 
                 styleSheet(has type "button") {
                     background = Color.RGBa(ColorRGBa.WHITE)
                     color = Color.RGBa(ColorRGBa.BLACK)
                     height = 40.px
+                    fontSize = 18.px
                 }
                 styleSheet(has type "slider") {
-                    color = Color.RGBa(ColorRGBa.YELLOW)
+                    color = Color.RGBa(ColorRGBa.BLACK)
                     background = Color.RGBa(ColorRGBa.DARK_BLUE)
                     height = 40.px
-                    fontSize = 16.px
+                    fontSize = 12.px
+
                 }
                 styleSheet(has class_ "side-bar") {
-                    this.height = 40.percent
+                    this.height = 380.px
                     this.width = 200.px
                     this.display = Display.FLEX
                     this.flexDirection = FlexDirection.Column
@@ -148,6 +149,22 @@ fun main() = application {
                     this.paddingRight = 10.px
                     this.background = Color.RGBa(ColorRGBa.LIGHT_GREEN)
                 }
+                div("horizontal") {
+                    slider {
+                        label = "Force"
+                        value = configuration.cueForce
+                        range = Range(0.0, MAXIMUM_FORCE)
+                        events.valueChanged.listen { configuration.cueForce = it.newValue }
+                    }
+                }//div
+                div("horizontal") {
+                    slider {
+                        label = "Angle"
+                        value = configuration.cueAngle
+                        range = Range(0.0, 360.0)
+                        events.valueChanged.listen { configuration.cueAngle = it.newValue }
+                    }
+                }//div
                 div("horizontal") {
 
 
@@ -179,105 +196,79 @@ fun main() = application {
                     button {
                         label = "Load Game"
                         clicked {
-                            openFileDialog(supportedExtensions = listOf("pool"), contextID = "pool") { loadGame(it, balls) }
-                            print("Load file")
+                            LoadGame(balls)
+                        }
+                    }
+
+                    button {
+                        label = "Save Game"
+                        clicked {
+                            saveGame(balls)
                         }
                     }
                     button {
                         label = "Load Config"
                         clicked {
-                            openFileDialog(supportedExtensions = listOf("poolc"), contextID = "pool") {
-                                print(it)
-                            }
-                            print("Load file")
+                            LoadConfiguration()
                         }
+
                     }
-
                     button {
-                        label = "Save"
+                        label = "Save Config"
                         clicked {
-                            val defaultPath = getDefaultPathForContext(contextID = "pool")
-                            val defaultSaveFolder = "pool"
-                            if (defaultPath == null) {
-                                val local = File(".")
-                                val parameters = File(local, defaultSaveFolder)
-                                if (parameters.exists() && parameters.isDirectory) {
-                                    setDefaultPathForContext(contextID = "pool", file = parameters)
-                                } else {
-                                    if (parameters.mkdirs()) {
-                                        setDefaultPathForContext(
-                                            contextID = "pool",
-                                            file = parameters
-                                        )
-                                    } else {
-                                        print("Could not create directory ${parameters.absolutePath}")
-                                    }
-                                }
-                            }
-
-                            saveFileDialog(
-                                suggestedFilename = "game1.pool",
-                                contextID = "pool",
-                                supportedExtensions = listOf("pool")
-                            ) {
-                                saveGame(it, balls)
-                            }
+                            statusMessage = "Do save config"
                         }
                     }
                     slider {
                         style = styleSheet {
-                            width = 100.px
+                            width = 180.px
                         }
-                        label = "Display Speed"
-                        value = displayIncrement.toDouble()
-                        range = Range(1.0, computationSegments.toDouble())
-                        events.valueChanged.listen { displayIncrement = (it.newValue + .01).toInt() }
+                        label = "Trim Angle"
+                        value = configuration.cueAngleTrim
+                        range = Range(-2.0, 2.0)
+
+                        events.valueChanged.listen { configuration.cueAngleTrim = it.newValue }
                     }
-                }//div
-                div("horizontal") {
-                    slider {
-                        label = "Force"
-                        value = cueForce
-                        range = Range(0.0, MAXIMUM_FORCE)
-                        events.valueChanged.listen { cueForce = it.newValue }
-                    }
-                }//div
-                div("horizontal") {
-                    slider {
-                        label = "Angle"
-                        value = cueAngle
-                        range = Range(0.0, 360.0)
-                        events.valueChanged.listen { cueAngle = it.newValue }
-                    }
+
                 }//div
                 div("side-bar") {
 
                     slider {
                         style = styleSheet {
-                            width = 100.px
+                            width = 180.px
                         }
                         label = "Restitution"
-                        value = restitution
+                        value = configuration.restitution
                         range = Range(0.0, MAXIMUM_RESTITUTION)
-                        events.valueChanged.listen { restitution = it.newValue }
+
+                        events.valueChanged.listen { configuration.restitution = it.newValue }
                     }
                     slider {
                         style = styleSheet {
-                            width = 100.px
+                            width = 180.px
                         }
                         label = "Cushion Elasticity"
-                        value = cushionElasticity
+                        value = configuration.cushionElasticity
                         range = Range(0.0, MAXIMUM_CUSHION_ELASTICITY)
-                        events.valueChanged.listen { cushionElasticity = it.newValue }
+                        events.valueChanged.listen { configuration.cushionElasticity = it.newValue }
                     }
                     slider {
                         style = styleSheet {
-                            width = 100.px
+                            width = 180.px
                         }
                         label = "Rolling Resistance"
-                        value = rollingResistance
+                        value = configuration.rollingResistance
                         range = Range(MINIMUM_RESISTANCE, MAXIMUM_RESISTANCE)
-                        events.valueChanged.listen { rollingResistance = it.newValue }
+                        events.valueChanged.listen { configuration.rollingResistance = it.newValue }
+                    }
+                    slider {
+                        style = styleSheet {
+                            width = 180.px
+                        }
+                        label = "Display Speed"
+                        value = configuration.displayIncrement.toDouble()
+                        range = Range(1.0, computationSegments.toDouble())
+                        events.valueChanged.listen { configuration.displayIncrement = (it.newValue + .01).toInt() }
                     }
                     textfield() {
                         label = "Your ID"
@@ -306,6 +297,7 @@ fun main() = application {
                         label = "Switch turn"
                         clicked {
                             your_turn = !your_turn
+                            iswitchedTurns = 0
                             println("Your turn $your_turn")
                         }
                     }
@@ -318,20 +310,17 @@ fun main() = application {
         extend {
             var deltaTime = this.seconds - previousTime
             // val timesPerSecond = 1.0 / deltaTime
-            // print("Delta Time is $deltaTime per second $timesPerSecond \n" )
+            // println("Delta Time is $deltaTime per second $timesPerSecond \n" )
             previousTime = this.seconds
-
-
             val messageTime = this.seconds - previousMessageCheck
             val addressesSet = opponentID != "" && yourID != ""
+            if (!addressesSet)
+                statusMessage = "Playing Solo"
+            else
+                statusMessage = "Playing with $opponentID "
             if (((messageTime > 1.0 && !moving) || startMoving) && addressesSet) {
                 messageOut.ballsAll = balls
-                messageOut.configuration.cueAngle = cueAngle
-                messageOut.configuration.cueForce = cueForce
-                messageOut.configuration.cushionElasticity = cushionElasticity
-                messageOut.configuration.restitution = restitution
-                messageOut.configuration.displayIncrement = displayIncrement
-                messageOut.configuration.rollingResistance = rollingResistance
+                messageOut.configuration = configuration.copy()
                 messageOut.header.opponentID = opponentID
                 messageOut.header.yourID = yourID
                 messageOut.header.opponentMessage = opponentMessage
@@ -339,33 +328,30 @@ fun main() = application {
                 messageOut.header.startMoving = startMoving
                 messageOut.header.yourTurn = your_turn
                 messageOut.header.dateStamp = program.seconds
-                println("Sending $rollingResistance $your_turn")
+                println("Sending ${configuration.cueAngleTrim} $your_turn")
 
                 val inputText = communication(client, messageOut.toString())
 
                 val goodMessage = messageIn.fromString(inputText)
                 errorMessage = "All OK"
                 if (goodMessage) {
-                    your_turn = ! messageIn.header.yourTurn
                     opponentMessage = messageIn.header.opponentMessage
                 }
                 else
                     errorMessage = "Not connected"
-                if (!your_turn && goodMessage && previousMessageDateStamp !=
-                    messageIn.header.dateStamp
-                ) {
+                var listenToOpponent = !your_turn && goodMessage && previousMessageDateStamp !=
+                        messageIn.header.dateStamp
+
+                if (listenToOpponent) {
                     balls = messageIn.ballsAll
-                    cueAngle = messageIn.configuration.cueAngle
-                    cueForce = messageIn.configuration.cueForce
-                    cushionElasticity = messageIn.configuration.cushionElasticity
-                    restitution = messageIn.configuration.restitution
-                    displayIncrement = messageIn.configuration.displayIncrement
-                    rollingResistance = messageIn.configuration.rollingResistance
-//                         opponentID=messageIn.header.opponentID
-//                         yourID=messageIn.header.yourID
+                    configuration = messageIn.configuration.copy()
+                    println("Receiving ${configuration.cueAngleTrim}")
+                    opponentID=messageIn.header.opponentID
+                    yourID=messageIn.header.yourID
                     opponentMessage = messageIn.header.opponentMessage
                     startMoving = messageIn.header.startMoving
-                    your_turn = !messageIn.header.yourTurn
+                    if (iswitchedTurns++ > 3)
+                        your_turn = !messageIn.header.yourTurn
                     previousMessageDateStamp = messageIn.header.dateStamp
                     print("Received Your turn $your_turn  starting $startMoving")
                 }
@@ -392,16 +378,19 @@ fun main() = application {
             if (moving) {
                 statusMessage = "Moving"
                 deltaTime = .015    // ******************************  take out maybe******
+                val SEGMENT_TIME = .00015
+                computationSegments = (deltaTime/SEGMENT_TIME).roundToInt()
+               val  computationTime = SEGMENT_TIME * computationSegments
                 startMoving = false
                 moveBalls(
                     balls,
                     TABLE_SIZE,
-                    cushionElasticity,
-                    restitution,
-                    rollingResistance,
+                    configuration.cushionElasticity,
+                    configuration.restitution,
+                    configuration.rollingResistance,
                     computationSegments,
-                    displayIncrement,
-                    deltaTime,
+                    configuration.displayIncrement,
+                    computationTime,
                     pockets
                 )
                 val time = program.seconds
@@ -415,11 +404,52 @@ fun main() = application {
                     stopAll(balls)
                 }
             } else {
-                val percentage: Percentage = xyFromAngle(cueAngle)
-                startingVelocity = Velocity(cueForce * percentage.x, cueForce * percentage.y)
-                drawCueLine(balls, tableUpperLeft, cueForce / MAXIMUM_FORCE, percentage, TABLE_SIZE.x)
+                val percentage: Percentage = xyFromAngle(configuration.cueAngle + configuration.cueAngleTrim)
+                startingVelocity = Velocity(configuration.cueForce * percentage.x, configuration.cueForce * percentage.y)
+                drawCueLine(balls, tableUpperLeft, configuration.cueForce / MAXIMUM_FORCE, percentage, TABLE_SIZE.x)
             }
         }
+    }
+}
+
+private fun LoadConfiguration() {
+    openFileDialog(supportedExtensions = listOf("poolc"), contextID = "pool") {
+        print(it)
+    }
+    print("Load file")
+}
+
+private fun Program.LoadGame(balls: Array<Ball>) {
+    openFileDialog(supportedExtensions = listOf("pool"), contextID = "pool") { loadGame(it, balls) }
+    print("Load file")
+}
+
+private fun Program.saveGame(balls: Array<Ball>) {
+    val defaultPath = getDefaultPathForContext(contextID = "pool")
+    val defaultSaveFolder = "pool"
+    if (defaultPath == null) {
+        val local = File(".")
+        val parameters = File(local, defaultSaveFolder)
+        if (parameters.exists() && parameters.isDirectory) {
+            setDefaultPathForContext(contextID = "pool", file = parameters)
+        } else {
+            if (parameters.mkdirs()) {
+                setDefaultPathForContext(
+                    contextID = "pool",
+                    file = parameters
+                )
+            } else {
+                print("Could not create directory ${parameters.absolutePath}")
+            }
+        }
+    }
+
+    saveFileDialog(
+        suggestedFilename = "game1.pool",
+        contextID = "pool",
+        supportedExtensions = listOf("pool")
+    ) {
+        saveGame(it, balls)
     }
 }
 
@@ -440,7 +470,7 @@ fun readGameString(text: String, ballsCurrent: Array<Ball>): Array<Ball> {
 fun readGameStringList(lines: List<String>, ballsCurrent: Array<Ball>): Array<Ball> {
     val ballsOut = copyBalls(ballsCurrent)
     if (lines.size < 17) {
-        println("Not changing balls on input")
+        println("Not changing balls on input - bad size")
         return ballsOut
     }
 
@@ -628,13 +658,13 @@ fun Program.drawChat(
     drawer.fill = ColorRGBa.GRAY
     drawer.stroke = ColorRGBa.GRAY
     drawer.strokeWeight = 2.0
-    var box1 = Rectangle(0.0, 500.0, 200.0, 200.0)
+    var box1 = Rectangle(0.0, 550.0, 200.0, 200.0)
     drawer.rectangle(box1)
     val font = loadFont(fontFileName, 24.0)
     drawer.fontMap = font
     drawer.fill = ColorRGBa.PINK
     writer {
-        box = Rectangle(10.0, 500.0, 180.0, 40.0)
+        box = Rectangle(10.0, 560.0, 180.0, 40.0)
         newLine()
         text(yourTurnLabel(your_turn))
     }

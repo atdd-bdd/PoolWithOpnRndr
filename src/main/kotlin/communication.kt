@@ -34,7 +34,7 @@ fun communication(client: HttpClient, messageOut: String): String {
         }
     }
     catch(e : Exception ){
-        println("*** Exception in Communication *** ")
+        println("*** Exception in Communication *** $e")
     }
     return text
 }

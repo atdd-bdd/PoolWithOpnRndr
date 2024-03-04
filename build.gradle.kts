@@ -77,7 +77,7 @@ val openrndrFeatures = setOfNotNull(
 /** ## configure the type of logging this project uses */
 enum class Logging { NONE, SIMPLE, FULL }
 
-val applicationLogging = Logging.FULL
+val applicationLogging = Logging.NONE
 
 // ------------------------------------------------------------------------------------------------------------------ //
 

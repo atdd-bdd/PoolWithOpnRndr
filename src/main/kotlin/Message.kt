@@ -1,6 +1,6 @@
 class Message {
     val header = Header()
-    val configuration = Configuration()
+    var configuration = Configuration()
     var ballsAll = initialBalls()
     override fun toString(): String {
         val headerValue = header.toStringList()
@@ -16,7 +16,7 @@ class Message {
          var lines = value.split("\r\n", "\n", "\r");
          if (lines.size < 8)
              return false
-//        println("***** Input lines are $lines.size *****")
+//       println("***** Input lines are $lines.size *****")
 //        printStringList(lines)
         lines = header.fromStringList(lines)
 //        println("Configuration lines ")

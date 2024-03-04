@@ -66,11 +66,11 @@ private fun checkForIncrease(
     symbol: String
 ): Boolean {
     if (currentEnergy - .01 > previousEnergy) {
-        println("Energy  increasing ******* $currentEnergy from $previousEnergy  in move balls at $symbol")
+//        println("Energy  increasing ******* $currentEnergy from $previousEnergy  in move balls at $symbol")
         return true;
     }
     if (currentMomentum - .01 > previousMomentum) {
-        println(" Momentum increasing ******* $ $currentMomentum from $previousMomentum in move balls at $symbol")
+//        println(" Momentum increasing ******* $ $currentMomentum from $previousMomentum in move balls at $symbol")
         return true;
     }
     return false
@@ -95,12 +95,12 @@ fun computeCollisions(balls: Array<Ball>, restitution: Double) {
                 )
                 val endMomentum = computeTotalMomentum(velocities.velocity1, velocities.velocity2)
                 if (endMomentum - .01 > startMomentum) {
-                    println("***** Ball momentum increasing $first $second ")
-                    printBall(firstBall)
-                    printBall(secondBall)
-                    println("End momentum $endMomentum from $startMomentum")
-                    println("End velocity  $velocities.velocity1,  $velocities.velocity2")
-                    checkMomentum(firstBall.velocity, secondBall.velocity, velocities.velocity1, velocities.velocity2)
+//                    println("***** Ball momentum increasing $first $second ")
+//                    printBall(firstBall)
+//                    printBall(secondBall)
+//                    println("End momentum $endMomentum from $startMomentum")
+//                    println("End velocity  $velocities.velocity1,  $velocities.velocity2")
+//                    checkMomentum(firstBall.velocity, secondBall.velocity, velocities.velocity1, velocities.velocity2)
                 }
                 balls[first].velocity = velocities.velocity1
                 balls[second].velocity = velocities.velocity2
