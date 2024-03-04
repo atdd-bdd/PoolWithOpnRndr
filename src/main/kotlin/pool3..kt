@@ -80,8 +80,8 @@ fun main() = application {
         var ballMoving = MOUSE_NOT_ON_BALL
         var startPosition = Position(0.0, 0.0)
         val pockets = Pockets()
-        var errorMessage =""
-        var statusMessage =""
+        var errorMessage = ""
+        var statusMessage = ""
         mouse.buttonDown.listen {
             //print( it.position.toString() + "\n")
             val currentPosition = mouseToPosition(it, tableUpperLeft)
@@ -298,7 +298,6 @@ fun main() = application {
                         clicked {
                             your_turn = !your_turn
                             iswitchedTurns = 0
-                            println("Your turn $your_turn")
                         }
                     }
 
@@ -336,18 +335,18 @@ fun main() = application {
                 errorMessage = "All OK"
                 if (goodMessage) {
                     opponentMessage = messageIn.header.opponentMessage
-                }
-                else
+                } else
                     errorMessage = "Not connected"
                 var listenToOpponent = !your_turn && goodMessage && previousMessageDateStamp !=
                         messageIn.header.dateStamp
-
+                if (previousMessageDateStamp ==  messageIn.header.dateStamp)
+                    println("No new message received")
                 if (listenToOpponent) {
                     balls = messageIn.ballsAll
                     configuration = messageIn.configuration.copy()
                     println("Receiving ${configuration.cueAngleTrim}")
-                    opponentID=messageIn.header.opponentID
-                    yourID=messageIn.header.yourID
+                   // opponentID = messageIn.header.opponentID
+                    //yourID = messageIn.header.yourID
                     opponentMessage = messageIn.header.opponentMessage
                     startMoving = messageIn.header.startMoving
                     if (iswitchedTurns++ > 3)
@@ -371,16 +370,18 @@ fun main() = application {
                 previousBalls = copyBalls(balls)
 
                 hitCue(balls, startingVelocity)
-                checkMomentum(previousBalls[0].velocity, previousBalls[1].velocity,
-                    balls[0].velocity, balls[1].velocity )
+                checkMomentum(
+                    previousBalls[0].velocity, previousBalls[1].velocity,
+                    balls[0].velocity, balls[1].velocity
+                )
             }
             statusMessage = "Not moving"
             if (moving) {
                 statusMessage = "Moving"
                 deltaTime = .015    // ******************************  take out maybe******
                 val SEGMENT_TIME = .00015
-                computationSegments = (deltaTime/SEGMENT_TIME).roundToInt()
-               val  computationTime = SEGMENT_TIME * computationSegments
+                computationSegments = (deltaTime / SEGMENT_TIME).roundToInt()
+                val computationTime = SEGMENT_TIME * computationSegments
                 startMoving = false
                 moveBalls(
                     balls,
@@ -405,7 +406,8 @@ fun main() = application {
                 }
             } else {
                 val percentage: Percentage = xyFromAngle(configuration.cueAngle + configuration.cueAngleTrim)
-                startingVelocity = Velocity(configuration.cueForce * percentage.x, configuration.cueForce * percentage.y)
+                startingVelocity =
+                    Velocity(configuration.cueForce * percentage.x, configuration.cueForce * percentage.y)
                 drawCueLine(balls, tableUpperLeft, configuration.cueForce / MAXIMUM_FORCE, percentage, TABLE_SIZE.x)
             }
         }
@@ -454,7 +456,7 @@ private fun Program.saveGame(balls: Array<Ball>) {
 }
 
 
-fun Program.loadGame(it: File, ballsCurrent: Array<Ball>) : Array<Ball>{
+fun Program.loadGame(it: File, ballsCurrent: Array<Ball>): Array<Ball> {
     print("Loading game from $it")
     val text = it.readText()
     val ballsOut = readGameString(text, ballsCurrent)
@@ -463,7 +465,7 @@ fun Program.loadGame(it: File, ballsCurrent: Array<Ball>) : Array<Ball>{
 
 fun readGameString(text: String, ballsCurrent: Array<Ball>): Array<Ball> {
     val lines = text.split("\r\n", "\n", "\r");
-    val  ballsOut = readGameStringList(lines, ballsCurrent)
+    val ballsOut = readGameStringList(lines, ballsCurrent)
     return ballsOut
 }
 
@@ -803,9 +805,8 @@ fun initialBalls(): Array<Ball> {
 
 fun copyBalls(inValue: Array<Ball>): Array<Ball> {
     var balls = initialBalls()
-    for (i in 0 until inValue.size)
-    {
-       val inBall = inValue[i]
+    for (i in 0 until inValue.size) {
+        val inBall = inValue[i]
         balls[i].position = Position(inBall.position.x, inBall.position.y)
         balls[i].velocity = Velocity(inBall.velocity.x, inBall.velocity.y)
         balls[i].active = inBall.active
