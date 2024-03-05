@@ -16,6 +16,7 @@ import org.openrndr.panel.style.Display
 import org.openrndr.panel.styleSheet
 import org.openrndr.shape.Rectangle
 import kotlin.math.roundToInt
+import kotlin.reflect.KMutableProperty
 
 const val BALL_RADIUS = 10.00
 const val BALL_DIAMETER_SQUARED = (BALL_RADIUS * 2) * (BALL_RADIUS * 2)
@@ -41,7 +42,6 @@ fun main() = application {
     val colors = colorOfBalls()
     val stripes = stripOnBalls()
 
-    var configuration = Configuration()
 
     var startingVelocity = Velocity(0.0, 0.0)
 
@@ -67,6 +67,7 @@ fun main() = application {
         windowResizable = false
     }
     program {
+        var configuration = Configuration()
         val messageIn = Message()
         val messageOut = Message()
         var your_turn = true
@@ -103,8 +104,10 @@ fun main() = application {
             if (ballMoving != MOUSE_NOT_ON_BALL) balls[ballMoving].position =
                 mouseToPosition(it, tableUpperLeft)
         }
-        extend(ControlManager()) {
-
+        val cm = ControlManager()
+        cm.program = this
+        extend (cm) {
+            //var angle : KMutableProperty<Double> =0.0
             layout {
 
                 backgroundColor = ColorRGBa.WHITE
@@ -158,10 +161,13 @@ fun main() = application {
                 }//div
                 div("horizontal") {
                     slider {
+
+                       bind(configuration::cueAngle)
+
                         label = "Angle"
-                        value = configuration.cueAngle
+                       // value = configuration.cueAngle
                         range = Range(0.0, 360.0)
-                        events.valueChanged.listen { configuration.cueAngle = it.newValue }
+                       // events.valueChanged.listen { configuration.cueAngle = it.newValue }
                     }
                 }//div
                 div("horizontal") {
@@ -209,7 +215,7 @@ fun main() = application {
                     button {
                         label = "Load Config"
                         clicked {
-                            configuration = loadConfigurationFromFile()
+                             loadConfigurationFromFile().copyTo(configuration)
                         }
 
                     }
@@ -349,7 +355,7 @@ fun main() = application {
                         messageIn.header.dateStamp
                 if (listenToOpponent) {
                     balls = messageIn.ballsAll
-                    configuration = messageIn.configuration.copy()
+                    messageIn.configuration.copyTo(configuration)
                     Debug.println("Receiving ${configuration.cueAngleTrim}")
                     // opponentID = messageIn.header.opponentID
                     //yourID = messageIn.header.yourID

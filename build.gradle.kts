@@ -99,7 +99,7 @@ repositories {
 dependencies {
 
 //    implementation(libs.jsoup)
-//    implementation(libs.gson)
+     implementation(libs.gson)
 //    implementation(libs.csv)
 
     implementation("io.ktor:ktor-client-core:2.3.7")
@@ -125,6 +125,7 @@ dependencies {
         }
     }
     implementation(kotlin("stdlib-jdk8"))
+
     testImplementation(libs.junit)
 }
 

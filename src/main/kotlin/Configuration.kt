@@ -7,7 +7,17 @@ class Configuration
     var cushionElasticity = 0.70
     var displayIncrement = 100
     var cueAngleTrim = 0.0
+    fun copyTo(out: Configuration) {
 
+        out.cueAngle = cueAngle
+        out.cueForce = cueForce
+        out.rollingResistance = rollingResistance
+        out.restitution = restitution
+        out.cushionElasticity = cushionElasticity
+        out.displayIncrement = displayIncrement
+        out.cueAngleTrim = cueAngleTrim
+
+    }
     fun copy() : Configuration{
         val out = Configuration()
         out.cueAngle = cueAngle
