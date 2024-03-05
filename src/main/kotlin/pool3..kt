@@ -23,6 +23,8 @@ val TABLE_SIZE = Vector2(900.0, 450.0)
 
 private const val MOUSE_NOT_ON_BALL = -1
 
+// A sharable state could be added to this program.
+// That would allow more function extraction
 
 fun main() = application {
     val client = HttpClient {
@@ -444,6 +446,10 @@ fun whichBallToMove(position: Position, balls: Array<Ball>): Int {
 //    return balls
 //}
 
+// This function and others that have Program. as a modifier
+// Give a "always null" in analysis of code.
+// drawer could be added to the parameter list
+
 private fun Program.drawBalls(
     balls: Array<Ball>, colors: Array<ColorRGBa>, hasStripe: Array<Boolean>, tableUpperLeft: Vector2,
 ) {
@@ -619,7 +625,6 @@ private fun Program.drawPockets(tableUpperLeft: Vector2, pockets: Pockets) {
       drawPocketLine(pockets.headRightCornerPocketHeadLine, tableUpperLeft)
       drawPocketLine(pockets.footRightCornerPocketFootLine, tableUpperLeft)
       drawPocketLine(pockets.footRightCornerPocketSideLine, tableUpperLeft)
-
      */
 }
 

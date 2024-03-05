@@ -31,6 +31,7 @@ fun <T> concatenate(vararg lists: List<T>): List<T> {
     return listOf(*lists).flatten()
 }
 
+@Suppress("unused")
 fun printStringList(lines: List<String>){
     println("List is")
     for (line in lines){

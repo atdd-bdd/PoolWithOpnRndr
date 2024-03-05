@@ -197,7 +197,7 @@ class Pockets {
 
 
     var leftSidePocketLine: LineSegment
-    var rightSidePocketLine: LineSegment
+    private var rightSidePocketLine: LineSegment
     private var footRightCornerPocketFootLine: LineSegment
     private var footRightCornerPocketSideLine: LineSegment
     var headRightCornerPocketHeadLine: LineSegment

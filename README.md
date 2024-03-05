@@ -1,21 +1,27 @@
 # Pool using OPENRNDR
 
-This project started with the OpenRndr template ](https://guide.openrndr.org/setUpYourFirstProgram.html)  [OPENRNDR guide](https://guide.openrndr.org)
+This project started with the OpenRndr template (https://guide.openrndr.org/setUpYourFirstProgram.html)  [OPENRNDR guide](https://guide.openrndr.org)
 
-pool3.kt contains main.    
-  This file contains the display methods
+The balls only have position and velocity 
+An potential change is to add spin (vertical and horizontal).  This would affect the movement, collisions, and cushion rebounding.  This would be an interesting project.
+
+pool3.kt contains main    
+  The display and control methods 
+
 physics.kt 
-  Contains all the methods for 
+  The calculation methods 
 
-The Gradle task to create a single jar of the program with all libraries is shadowDistZip 
+Pockets.kt 
+  Calculations for the pockets and cushions 
 
+SaveAndLoad 
+  Balls and configuration saving and loading 
 
+The Gradle task to create a single jar of the program with all libraries is shadow 
 
-
-
+To communicate with another player, the program uses a web service 
 
 Here is additional information that was in the openrndr template. I have not tried these taks - just the Intellij run commands and creating a single jar.  
-
 
 ## Gradle tasks
  - `run` runs the TemplateProgram

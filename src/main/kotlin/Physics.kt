@@ -257,31 +257,31 @@ fun checkCushion(
 //
 //private fun atHead(position: Position, velocityX: Double) = ((position.x <= 0.0 + BALL_RADIUS) && velocityX < 0)
 
-private fun checkForNotApproachingSidePockets(position: Position, pockets: Pockets, tableSize: Vector2): Boolean {
-    var notInPocket = true
-    if (position.x > pockets.leftSidePocketLine.start.x + BALL_RADIUS && position.x < pockets.leftSidePocketLine.end.x - BALL_RADIUS)
-        notInPocket = false
-    if (position.x < pockets.headLeftCornerPocketSideLine.end.x - BALL_RADIUS)
-        notInPocket = false
-    if (position.x > pockets.footLeftCornerPocketSideLine.start.x + BALL_RADIUS)
-        notInPocket = false
-    if (position.y < 0.0 || position.y > tableSize.y)
-        notInPocket = false
-    return notInPocket
-}
+//private fun checkForNotApproachingSidePockets(position: Position, pockets: Pockets, tableSize: Vector2): Boolean {
+//    var notInPocket = true
+//    if (position.x > pockets.leftSidePocketLine.start.x + BALL_RADIUS && position.x < pockets.leftSidePocketLine.end.x - BALL_RADIUS)
+//        notInPocket = false
+//    if (position.x < pockets.headLeftCornerPocketSideLine.end.x - BALL_RADIUS)
+//        notInPocket = false
+//    if (position.x > pockets.footLeftCornerPocketSideLine.start.x + BALL_RADIUS)
+//        notInPocket = false
+//    if (position.y < 0.0 || position.y > tableSize.y)
+//        notInPocket = false
+//    return notInPocket
+//}
 
-private fun checkForNotPocketY(position: Position, pockets: Pockets, tableSize: Vector2): Boolean {
-    var notInPocket = true
-
-    if (position.y < pockets.headLeftCornerPocketHeadLine.end.y - BALL_RADIUS)
-        notInPocket = false
-    if (position.y > pockets.headRightCornerPocketHeadLine.start.y + BALL_RADIUS)
-        notInPocket = false
-    if (position.x < 0.0 || position.x > tableSize.x)
-        notInPocket = false
-
-    return notInPocket
-}
+//private fun checkForNotPocketY(position: Position, pockets: Pockets, tableSize: Vector2): Boolean {
+//    var notInPocket = true
+//
+//    if (position.y < pockets.headLeftCornerPocketHeadLine.end.y - BALL_RADIUS)
+//        notInPocket = false
+//    if (position.y > pockets.headRightCornerPocketHeadLine.start.y + BALL_RADIUS)
+//        notInPocket = false
+//    if (position.x < 0.0 || position.x > tableSize.x)
+//        notInPocket = false
+//
+//    return notInPocket
+//}
 
 fun xyFromAngle(angle: Double): Percentage {
     val result = Percentage(0.0, 0.0)
