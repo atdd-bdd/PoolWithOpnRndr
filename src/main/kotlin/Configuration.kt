@@ -5,7 +5,7 @@ class Configuration
     var rollingResistance = 0.01
     var restitution = 0.95
     var cushionElasticity = 0.70
-    var displayIncrement = 100
+    var displayIncrement = 100.0
     var cueAngleTrim = 0.0
     fun copyTo(out: Configuration) {
 
@@ -45,7 +45,7 @@ class Configuration
         rollingResistance = lines[2].toDouble()
         restitution = lines[3].toDouble()
         cushionElasticity = lines[4].toDouble()
-        displayIncrement =lines[5].toInt()
+        displayIncrement =lines[5].toDouble()
         cueAngleTrim = lines[6].toDouble()
         return lines.subList(7, lines.size)
     }

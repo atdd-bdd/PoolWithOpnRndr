@@ -16,7 +16,6 @@ import org.openrndr.panel.style.Display
 import org.openrndr.panel.styleSheet
 import org.openrndr.shape.Rectangle
 import kotlin.math.roundToInt
-import kotlin.reflect.KMutableProperty
 
 const val BALL_RADIUS = 10.00
 const val BALL_DIAMETER_SQUARED = (BALL_RADIUS * 2) * (BALL_RADIUS * 2)
@@ -67,7 +66,7 @@ fun main() = application {
         windowResizable = false
     }
     program {
-        var configuration = Configuration()
+        val configuration = Configuration()
         val messageIn = Message()
         val messageOut = Message()
         var your_turn = true
@@ -154,25 +153,21 @@ fun main() = application {
                 div("horizontal") {
                     slider {
                         label = "Force"
-                        value = configuration.cueForce
+                        bind(configuration::cueForce)
                         range = Range(0.0, MAXIMUM_FORCE)
-                        events.valueChanged.listen { configuration.cueForce = it.newValue }
-                    }
+                      }
                 }//div
                 div("horizontal") {
                     slider {
-
                        bind(configuration::cueAngle)
-
                         label = "Angle"
-                       // value = configuration.cueAngle
                         range = Range(0.0, 360.0)
-                       // events.valueChanged.listen { configuration.cueAngle = it.newValue }
+                        // with no bind:
+                        // value = configuration.cueAngle
+                        // events.valueChanged.listen { configuration.cueAngle = it.newValue }
                     }
                 }//div
                 div("horizontal") {
-
-
                     button {
                         label = "Cue Stroke"
                         clicked {
@@ -230,11 +225,9 @@ fun main() = application {
                             width = 180.px
                         }
                         label = "Trim Angle"
-                        value = configuration.cueAngleTrim
+                        bind(configuration::cueAngleTrim)
                         range = Range(-2.0, 2.0)
-
-                        events.valueChanged.listen { configuration.cueAngleTrim = it.newValue }
-                    }
+                  }
 
                 }//div
                 div("side-bar") {
@@ -244,28 +237,26 @@ fun main() = application {
                             width = 180.px
                         }
                         label = "Restitution"
-                        value = configuration.restitution
+                        bind(configuration::restitution)
                         range = Range(0.0, MAXIMUM_RESTITUTION)
 
-                        events.valueChanged.listen { configuration.restitution = it.newValue }
                     }
                     slider {
                         style = styleSheet {
                             width = 180.px
                         }
                         label = "Cushion Elasticity"
-                        value = configuration.cushionElasticity
+                        bind(configuration::cushionElasticity)
                         range = Range(0.0, MAXIMUM_CUSHION_ELASTICITY)
-                        events.valueChanged.listen { configuration.cushionElasticity = it.newValue }
-                    }
+                     }
                     slider {
                         style = styleSheet {
                             width = 180.px
                         }
                         label = "Rolling Resistance"
-                        value = configuration.rollingResistance
+                       bind(configuration::rollingResistance)
                         range = Range(MINIMUM_RESISTANCE, MAXIMUM_RESISTANCE)
-                        events.valueChanged.listen { configuration.rollingResistance = it.newValue }
+
                     }
                     slider {
                         style = styleSheet {
@@ -273,9 +264,9 @@ fun main() = application {
                         }
 
                         label = "Display Speed"
-                        value = configuration.displayIncrement.toDouble()
+                        bind(configuration::displayIncrement)
                         range = Range(1.0, computationSegments.toDouble())
-                        events.valueChanged.listen { configuration.displayIncrement = (it.newValue + .01).toInt() }
+
                     }
                     textfield {
                         label = "Your ID"
@@ -402,7 +393,7 @@ fun main() = application {
                     configuration.restitution,
                     configuration.rollingResistance,
                     computationSegments,
-                    configuration.displayIncrement,
+                    configuration.displayIncrement.toInt(),
                     computationTime,
                     pockets
                 )
