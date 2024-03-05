@@ -2,6 +2,8 @@
 
 This project started with the OpenRndr template (https://guide.openrndr.org/setUpYourFirstProgram.html)  [OPENRNDR guide](https://guide.openrndr.org)
 
+To run, download pool.exe 
+
 The balls only have position and velocity 
 An potential change is to add spin (vertical and horizontal).  This would affect the movement, collisions, and cushion rebounding.  This would be an interesting project.
 
