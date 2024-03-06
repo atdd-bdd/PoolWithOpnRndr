@@ -27,8 +27,11 @@ fun saveConfigurationToFile(configuration: Configuration) {
     saveFileDialog(
         suggestedFilename = "game1.poolc",
         contextID = "pool",
-        supportedExtensions = listOf("poolc")
-    ) {
+  //      supportedExtensions = listOf("poolc")
+        supportedExtensions = listOf(
+            "poolc" to listOf("poolc"))
+    )
+    {
         saveConfiguration(it, configuration)
     }
 }
@@ -36,7 +39,9 @@ fun saveConfigurationToFile(configuration: Configuration) {
 
  fun loadConfigurationFromFile() : Configuration {
     var configuration = Configuration()
-    openFileDialog(supportedExtensions = listOf("poolc"), contextID = "pool") {
+    openFileDialog(   supportedExtensions = listOf(
+        "poolc" to listOf("poolc")), contextID = "pool")
+    {
         configuration = loadConfiguration(it)
     }
 
@@ -58,7 +63,8 @@ fun loadConfiguration(it: File): Configuration {
 
 fun loadGameFromFile(balls: Array<Ball>) : Array<Ball> {
     var ballsOut = balls.clone()
-    openFileDialog(supportedExtensions = listOf("pool"), contextID = "pool") { ballsOut = loadGame(it, balls) }
+    openFileDialog(   supportedExtensions = listOf(
+        "pool" to listOf("pool")), contextID = "pool") { ballsOut = loadGame(it, balls) }
     return ballsOut
 }
 
@@ -85,7 +91,9 @@ fun saveGameToFile(balls: Array<Ball>) {
     saveFileDialog(
         suggestedFilename = "game1.pool",
         contextID = "pool",
-        supportedExtensions = listOf("pool")
+        supportedExtensions = listOf(
+            "pool" to listOf("pool"))
+
     ) {
         saveGame(it, balls)
     }

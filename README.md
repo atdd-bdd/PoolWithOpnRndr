@@ -1,5 +1,34 @@
 # Pool using OPENRNDR
 
+This program is written using java.   You need to have java installed on your system.
+
+This program has only been tested on Windows.   To run it on Windows, 
+you can use either 
+
+java -jar pool-with-openrndr-all.jar
+or
+pool.exe (a wrapper around the above)
+
+You can play the game solo or with another person.    
+
+To play with another person:
+
+* Enter your id (e.g. email)
+* Enter the other person's id 
+* If you have both entered the ids correctly, the status will show as Connected 
+* One of you will need to "Switch Turns" 
+* You can communicate a simple message by entering in "Message to Opponent"
+
+Whose ever turn it is can press "Cue Stroke" after setting the angle and force
+* Lok for the opponent's status in the lower left corner. 
+* If the other person's computer is much slower than yours, then it will show as "Moving", while yours may show as "Not Moving".  Don't hit Cue Stroke again until the opponent's status shows "Not Moving"
+
+When the balls are not moving, you can click and move any of them
+
+If you want to replay a shot, press  "Replay"
+
+## Technical Issues
+
 This project started with the OpenRndr template (https://guide.openrndr.org/setUpYourFirstProgram.html)  [OPENRNDR guide](https://guide.openrndr.org)
 
 To run, download pool.exe 
