@@ -1,4 +1,4 @@
-enableFeaturePreview("VERSION_CATALOGS")
+
 rootProject.name = "pool-with-openrndr"
 
 val openrndrUseSnapshot = false
