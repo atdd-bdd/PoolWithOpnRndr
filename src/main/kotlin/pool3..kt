@@ -71,7 +71,7 @@ fun main() = application {
         val configuration = Configuration()
         val messageIn = Message()
         val messageOut = Message()
-        var your_turn = true
+        var yourTurn = true
         var previousMessageSendDelta = program.seconds
         var previousTime = program.seconds
         var moving = false
@@ -80,8 +80,20 @@ fun main() = application {
         var startPosition = Position(0.0, 0.0)
         val pockets = Pockets()
         var errorMessage = ""
-        var statusMessage: String
+        var statusOfGame: String
         var noMessageCount = 0
+        var yourStatus: String
+        var opponentStatus = "No opponent"
+        var heardOpponentStatusOnce = false
+//        this.controlManager { window.minimized.listen{println("minimized")} }
+//        window.minimized.listen {
+//            println("Not minimizing")
+//            this.height = 700
+//            this.width = 700
+//        }
+//        window.sized.listen{
+//            println("*** Resizing ***")
+//        }
         mouse.buttonDown.listen {
             //print( it.position.toString() + "\n")
             val currentPosition = mouseToPosition(it, tableUpperLeft)
@@ -107,7 +119,9 @@ fun main() = application {
         }
         val cm = ControlManager()
         cm.program = this
+
         extend (cm) {
+
             //var angle : KMutableProperty<Double> =0.0
             layout {
 
@@ -173,7 +187,8 @@ fun main() = application {
                     button {
                         label = "Cue Stroke"
                         clicked {
-                            startMoving = true
+                            if (yourTurn)
+                                startMoving = true
 
                         }
                     }
@@ -296,7 +311,7 @@ fun main() = application {
                     button {
                         label = "Switch turn"
                         clicked {
-                            your_turn = !your_turn
+                            yourTurn = !yourTurn
                             switchedTurns = 0
                         }
                     }
@@ -313,58 +328,72 @@ fun main() = application {
             previousTime = this.seconds
             val messageTime = this.seconds - previousMessageSendDelta
             val addressesSet = opponentID != "" && yourID != ""
-            statusMessage = if (!addressesSet)
+            statusOfGame = if (!addressesSet)
                 "Playing Solo"
             else
                 "Playing with $opponentID "
+            yourStatus = if (startMoving || moving)
+                "Moving"
+            else
+                "Not Moving"
             if (((messageTime > 1.0 && !moving) || startMoving) && addressesSet) {
-                messageOut.ballsAll = balls
+                   messageOut.ballsAll = balls
                 messageOut.configuration = configuration.copy()
                 messageOut.header.opponentID = opponentID
                 messageOut.header.yourID = yourID
-                messageOut.header.opponentMessage = opponentMessage
+                messageOut.header.yourStatus = yourStatus
                 messageOut.header.yourMessage = yourMessage
                 messageOut.header.startMoving = startMoving
-                messageOut.header.yourTurn = your_turn
+                messageOut.header.yourTurn = yourTurn
                 messageOut.header.dateStamp = program.seconds
-                Debug.println("Sending ${configuration.cueAngleTrim} $your_turn")
+                Debug.println("Sending ${configuration.cueAngleTrim} $yourTurn")
 
                 val inputText = communication(client, messageOut.toString())
                 val goodMessage = messageIn.fromString(inputText)
-                errorMessage = "All OK"
-
+                errorMessage = "Connection OK"
+                var newMessage = false
                 if (goodMessage) {
-                    opponentMessage = messageIn.header.opponentMessage
-                    if (previousMessageDateStamp == messageIn.header.dateStamp) {
+                     if (previousMessageDateStamp == messageIn.header.dateStamp) {
                         noMessageCount++
                         Debug.println("No new message received")
                         if (noMessageCount > 2)
                             errorMessage = "Connection Lost "
-                    } else
+                    } else {
                         noMessageCount = 0
+                        newMessage = true
+                         opponentMessage = messageIn.header.yourMessage
+                         if (!heardOpponentStatusOnce)
+                             opponentStatus = messageIn.header.yourStatus
+                         else
+                             heardOpponentStatusOnce = false
+                         previousMessageDateStamp = messageIn.header.dateStamp
+                    }
                 } else
                     errorMessage = "Not connected"
-                val listenToOpponent = !your_turn && goodMessage && previousMessageDateStamp !=
-                        messageIn.header.dateStamp
+                val listenToOpponent = !yourTurn && goodMessage && newMessage
+
                 if (listenToOpponent) {
                     balls = messageIn.ballsAll
                     messageIn.configuration.copyTo(configuration)
                     Debug.println("Receiving ${configuration.cueAngleTrim}")
                     // opponentID = messageIn.header.opponentID
                     //yourID = messageIn.header.yourID
-                    opponentMessage = messageIn.header.opponentMessage
+                    opponentMessage = messageIn.header.yourMessage // One from opponent
+                    opponentStatus = messageIn.header.yourStatus
                     startMoving = messageIn.header.startMoving
                     if (switchedTurns++ > 3)
-                        your_turn = !messageIn.header.yourTurn
+                        yourTurn = !messageIn.header.yourTurn
                     previousMessageDateStamp = messageIn.header.dateStamp
-                    Debug.println("Received Your turn $your_turn  starting $startMoving")
+                    Debug.println("Received Your turn $yourTurn  starting $startMoving")
                 }
                 previousMessageSendDelta = this.seconds
+                if (startMoving)
+                    opponentStatus = "Moving"
 
             }
             drawTable(tableUpperLeft, TABLE_SIZE, pockets)
             drawBalls(balls, colors, stripes, tableUpperLeft)
-            drawChat(your_turn, opponentMessage, fontFileName, errorMessage, statusMessage)
+            drawChat(yourTurn, opponentMessage, fontFileName, errorMessage, statusOfGame, opponentStatus, yourStatus)
             if (startMoving) {
                 moveCount = 0
                 totalMoveTime = 0.0
@@ -380,9 +409,9 @@ fun main() = application {
                     balls[0].velocity, balls[1].velocity
                 )
             }
-            statusMessage = "Not moving"
+
             if (moving) {
-                statusMessage = "Moving"
+                heardOpponentStatusOnce = true
                 deltaTime = .015    // ******************************  take out maybe******
                 val SEGMENT_TIME = .00015
                 computationSegments = (deltaTime / SEGMENT_TIME).roundToInt()
@@ -415,6 +444,7 @@ fun main() = application {
                     Velocity(configuration.cueForce * percentage.x, configuration.cueForce * percentage.y)
                 drawCueLine(balls, tableUpperLeft, configuration.cueForce / MAXIMUM_FORCE, percentage, TABLE_SIZE.x)
             }
+//            this.window.minimized.listen{height = 600; width = 600; println("Minimized")}
         }
     }
 }
@@ -447,7 +477,7 @@ fun whichBallToMove(position: Position, balls: Array<Ball>): Int {
 //}
 
 // This function and others that have Program. as a modifier
-// Give a "always null" in analysis of code.
+// Give an "always null" in analysis of code.
 // drawer could be added to the parameter list
 
 private fun Program.drawBalls(
@@ -548,7 +578,9 @@ fun Program.drawChat(
     opponentMessage: String,
     fontFileName: String,
     errorMessage: String,
-    statusMessage: String
+    statusMessage: String,
+    opponentStatus: String,
+    yourStatus: String
 ) {
     drawer.fill = ColorRGBa.GRAY
     drawer.stroke = ColorRGBa.GRAY
@@ -569,9 +601,13 @@ fun Program.drawChat(
     writer {
         box = Rectangle(10.0, 600.0, 180.0, 200.0)
         newLine()
+        text(statusMessage)
+        newLine()
         text(opponentMessage)
         newLine()
-        text(statusMessage)
+        text("Opponent $opponentStatus")
+        newLine()
+        text("You      $yourStatus")
         newLine()
         text(errorMessage)
     }

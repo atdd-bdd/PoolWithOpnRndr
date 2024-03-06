@@ -3,14 +3,14 @@ class Header {
     var yourID =""
     var opponentID =""
     var yourMessage =""
-    var opponentMessage =""
+    var yourStatus =""
     var startMoving = false
     var yourTurn = true
     var dateStamp = 0.0
     private var version = "V1.0"
     fun toStringList(): List<String> {
         return listOf(
-            opponentID, yourID, yourMessage, "NOT NEEDED", startMoving.toString(),
+            opponentID, yourID, yourMessage, yourStatus, startMoving.toString(),
             yourTurn.toString(), version, dateStamp.toString()
         )
     }
@@ -19,10 +19,11 @@ class Header {
                 Debug.println("Not long enough for header on input ")
                 return listOf("")
             }
+            // First two lines are not need on reception
 //            opponentID  = lines[0]
 //            yourID = lines[1]
-            opponentMessage = lines[2]
-//            opponentMessage = lines[3]
+            yourMessage = lines[2]
+            yourStatus = lines[3]
             startMoving = lines[4].toBoolean()
             yourTurn = (lines[5].toBoolean())
             version = lines[6]
